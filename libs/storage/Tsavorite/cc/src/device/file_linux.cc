@@ -37,8 +37,6 @@ Status File::Open(int flags, FileCreateDisposition create_disposition, bool* exi
   /// Always unbuffered (O_DIRECT).
   fd_ = ::open(filename_.c_str(), flags | O_RDWR | create_flags, S_IRUSR | S_IWUSR);
 
-  printf("[jusjin]::open %s, fd %d\r\n", filename_.c_str(), fd_);
-
   if(exists) {
     // Let the caller know whether the file we tried to open or create (already) exists.
     if(create_disposition == FileCreateDisposition::CreateOrTruncate ||
@@ -68,9 +66,6 @@ Status File::Open(int flags, FileCreateDisposition create_disposition, bool* exi
 Status File::Close() {
   if(fd_ != -1) {
     int result = ::close(fd_);
-
-    printf("[jusjin]::close %s, fd %d, result %d\r\n", filename_.c_str(), fd_, result);
-
     fd_ = -1;
     if(result == -1) {
       int error = errno;
@@ -83,9 +78,6 @@ Status File::Close() {
 
 Status File::Delete() {
   int result = ::remove(filename_.c_str());
-
-  printf("[jusjin]::remove %s, fd %d, result %d\r\n", filename_.c_str(), fd_, result);
-
   if(result == -1) {
     int error = errno;
     return Status::IOError;
@@ -126,9 +118,6 @@ void QueueIoHandler::IoCompletionCallback(io_context_t ctx, struct iocb* iocb, l
     return_status = Status::Ok;
     bytes_transferred = res;
   }
-
-  printf("[jusjin]::iocp_cb result %d\r\n", (int)return_status);
-
   callback_context->callback(callback_context->caller_context, return_status, bytes_transferred);
 }
 
@@ -137,9 +126,6 @@ bool QueueIoHandler::TryComplete() {
   std::memset(&timeout, 0, sizeof(timeout));
   struct io_event events[1];
   int result = ::io_getevents(io_object_, 1, 1, events, &timeout);
-
-  printf("[jusjin]::TryComplete::io_getevents result %d\r\n", result);
-
   if(result == 1) {
     io_callback_t callback = reinterpret_cast<io_callback_t>(events[0].data);
     callback(io_object_, events[0].obj, events[0].res, events[0].res2);
@@ -170,9 +156,6 @@ int QueueIoHandler::QueueRun(int timeout_secs) {
         int i;
         if ((n = ::io_getevents(io_object_, 1, IO_BATCH_EVENTS, events, &timeout)) <= 0)
             break;
-
-        printf("[jusjin]::QueueRun::io_getevents result %d\r\n", n);
-
         ret += n;
         for (ep = events, i = n; i-- > 0; ep++) {
             io_callback_t callback = reinterpret_cast<io_callback_t>(ep->data);
@@ -236,10 +219,6 @@ Status QueueFile::ScheduleOperation(FileOperationType operationType, uint8_t* bu
   iocbs[0] = reinterpret_cast<struct iocb*>(io_context.get());
 
   int result = ::io_submit(io_object_, 1, iocbs);
-
-  printf("[jusjin]::ScheduleOperation::io_submit fd %d, io type %s, result %d\r\n", fd_, 
-  operationType == FileOperationType::Read ? "read" : "write", result);
-
   if(result != 1) {
     return Status::IOError;
   }
