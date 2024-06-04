@@ -2103,7 +2103,7 @@ namespace Tsavorite.core
                 }
             }
 
-            Tsavorite.core.TraceEventSource.Tracer.WriteCommitMetadata_In();
+            Tsavorite.core.TraceEventSource.Tracer.WriteCommitMetadata_Out();
         }
 
         private void SerialCommitCallbackWorker(CommitInfo commitInfo)

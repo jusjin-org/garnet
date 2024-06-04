@@ -43,13 +43,13 @@ namespace Tsavorite.core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NativeDevice_QueueRun_In()
         {
-            GenericEvent("NativeDevice_QueueRun_In");
+            //GenericEvent("NativeDevice_QueueRun_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NativeDevice_QueueRun_Out()
         {
-            GenericEvent("NativeDevice_QueueRun_Out");
+            //GenericEvent("NativeDevice_QueueRun_Out");
         }
 
         //
