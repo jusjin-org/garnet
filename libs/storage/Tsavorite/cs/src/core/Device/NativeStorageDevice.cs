@@ -379,7 +379,7 @@ namespace Tsavorite.core
 
                     Tsavorite.core.TraceEventSource.Tracer.NativeDevice_QueueRun_In();
 
-                    NativeDevice_QueueRun(nativeDevice, 5);
+                    NativeDevice_QueueRun(nativeDevice, 0);
 
                     Tsavorite.core.TraceEventSource.Tracer.NativeDevice_QueueRun_Out();
                     
