@@ -26,13 +26,13 @@ namespace Tsavorite.core
             }
         }
 
-        [Event(10, Message = "{0}", Level = EventLevel.LogAlways)]
+        [Event(10000, Message = "{0}", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UnexpectedEvent(string message)
         {
             if (IsEnabled())
             {
-                WriteEvent(10, message);
+                WriteEvent(10000, message);
             }
         }
 
@@ -40,14 +40,12 @@ namespace Tsavorite.core
         // NativeDevice_QueueRun
         //
 
-        //[Event(10000, Message = "NativeDevice_QueueRun_In", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NativeDevice_QueueRun_In()
         {
             GenericEvent("NativeDevice_QueueRun_In");
         }
 
-        //[Event(10001, Message = "NativeDevice_QueueRun_Out", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NativeDevice_QueueRun_Out()
         {
@@ -58,14 +56,12 @@ namespace Tsavorite.core
         // _callback
         //
 
-        //[Event(10100, Message = "_callback_In", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void _callback_In()
         {
             GenericEvent("_callback_In");
         }
 
-        //[Event(10101, Message = "_callback_Out", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void _callback_Out()
         {
@@ -76,14 +72,12 @@ namespace Tsavorite.core
         // NativeStorageDevice
         //
 
-        //[Event(10200, Message = "NativeStorageDevice_In", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NativeStorageDevice_In()
         {
             GenericEvent("NativeStorageDevice_In");
         }
-
-        //[Event(10201, Message = "NativeStorageDevice_Out", Level = EventLevel.LogAlways)]
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NativeStorageDevice_Out()
         {
@@ -94,14 +88,12 @@ namespace Tsavorite.core
         // ReadAsync
         //
 
-        //[Event(10300, Message = "ReadAsync_In", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReadAsync_In()
         {
             GenericEvent("ReadAsync_In");
         }
 
-        //[Event(10301, Message = "ReadAsync_Out", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReadAsync_Out()
         {
@@ -112,14 +104,12 @@ namespace Tsavorite.core
         // WriteAsync
         //
 
-        //[Event(10400, Message = "WriteAsync_In", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteAsync_In()
         {
             GenericEvent("WriteAsync_In");
         }
 
-        //[Event(10401, Message = "WriteAsync_Out", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteAsync_Out()
         {
@@ -130,14 +120,12 @@ namespace Tsavorite.core
         // RemoveSegment
         //
 
-        //[Event(10500, Message = "RemoveSegment_In", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveSegment_In()
         {
             GenericEvent("RemoveSegment_In");
         }
 
-        //[Event(10501, Message = "RemoveSegment_Out", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveSegment_Out()
         {
@@ -148,14 +136,12 @@ namespace Tsavorite.core
         // RemoveSegmentAsync_cb
         //
 
-        //[Event(10600, Message = "RemoveSegmentAsync_cb_In", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveSegmentAsync_cb_In()
         {
             GenericEvent("RemoveSegmentAsync_cb_In");
         }
 
-        //[Event(10601, Message = "RemoveSegmentAsync_cb_Out", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveSegmentAsync_cb_Out()
         {
@@ -166,14 +152,12 @@ namespace Tsavorite.core
         // Dispose
         //
 
-        //[Event(10700, Message = "Dispose_In", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose_In()
         {
             GenericEvent("Dispose_In");
         }
 
-        //[Event(10701, Message = "Dispose_Out", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose_Out()
         {
@@ -184,14 +168,12 @@ namespace Tsavorite.core
         // AsyncFlushPageCallback
         //
 
-        //[Event(10800, Message = "AsyncFlushPageCallback_In", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AsyncFlushPageCallback_In()
         {
             GenericEvent("AsyncFlushPageCallback_In");
         }
 
-        //[Event(10801, Message = "AsyncFlushPageCallback_Out", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AsyncFlushPageCallback_Out()
         {
@@ -202,14 +184,12 @@ namespace Tsavorite.core
         // _work
         //
 
-        //[Event(10900, Message = "_work_In", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void _work_In()
         {
             GenericEvent("_work_In");
         }
 
-        //[Event(10901, Message = "_work_Out", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void _work_Out()
         {
@@ -219,14 +199,13 @@ namespace Tsavorite.core
         //
         // SerialCommitCallbackWorker
         //
-        //[Event(11000, Message = "SerialCommitCallbackWorker_In", Level = EventLevel.LogAlways)]
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SerialCommitCallbackWorker_In()
         {
             GenericEvent("SerialCommitCallbackWorker_In");
         }
 
-        //[Event(11001, Message = "SerialCommitCallbackWorker_Out", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SerialCommitCallbackWorker_Out()
         {
@@ -237,14 +216,12 @@ namespace Tsavorite.core
         // WriteCommitMetadata
         //
 
-        //[Event(11100, Message = "WriteCommitMetadata_In", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteCommitMetadata_In()
         {
             GenericEvent("WriteCommitMetadata_In");
         }
 
-        //[Event(11101, Message = "WriteCommitMetadata_Out", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteCommitMetadata_Out()
         {
