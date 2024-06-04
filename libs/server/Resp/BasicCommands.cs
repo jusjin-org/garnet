@@ -297,28 +297,47 @@ namespace Garnet.server
         private bool NetworkSET<TGarnetApi>(byte* ptr, ref TGarnetApi storageApi)
             where TGarnetApi : IGarnetApi
         {
+
+            Garnet.common.TraceEventSource.Tracer.NetworkSET_In();
+
             byte* keyPtr = null, valPtr = null;
             int ksize = 0, vsize = 0;
 
             if (!RespReadUtils.ReadPtrWithLengthHeader(ref keyPtr, ref ksize, ref ptr, recvBufferPtr + bytesRead))
+            {
+                Garnet.common.TraceEventSource.Tracer.UnexpectedEvent("NetworkSET: ReadPtrWithLengthHeader");
                 return false;
+            }
 
             if (!RespReadUtils.ReadPtrWithLengthHeader(ref valPtr, ref vsize, ref ptr, recvBufferPtr + bytesRead))
+            {
+                Garnet.common.TraceEventSource.Tracer.UnexpectedEvent("NetworkSET: ReadPtrWithLengthHeader");
                 return false;
+            }
 
             readHead = (int)(ptr - recvBufferPtr);
 
             if (NetworkSingleKeySlotVerify(keyPtr, ksize, false))
+            {
+                Garnet.common.TraceEventSource.Tracer.UnexpectedEvent("NetworkSET: NetworkSingleKeySlotVerify");
                 return true;
+            }
 
             keyPtr -= sizeof(int);
             valPtr -= sizeof(int);
             *(int*)keyPtr = ksize;
             *(int*)valPtr = vsize;
 
+            Garnet.common.TraceEventSource.Tracer.SET_In();
+
             var status = storageApi.SET(ref Unsafe.AsRef<SpanByte>(keyPtr), ref Unsafe.AsRef<SpanByte>(valPtr));
+
+            Garnet.common.TraceEventSource.Tracer.SET_Out();
+
             while (!RespWriteUtils.WriteDirect(CmdStrings.RESP_OK, ref dcurr, dend))
                 SendAndReset();
+
+            Garnet.common.TraceEventSource.Tracer.NetworkSET_Out();
 
             return true;
         }

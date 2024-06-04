@@ -2197,6 +2197,8 @@ namespace Tsavorite.core
         /// <param name="context"></param>
         private void AsyncFlushPageCallback(uint errorCode, uint numBytes, object context)
         {
+            Tsavorite.core.TraceEventSource.Tracer.AsyncFlushPageCallback_In();
+
             try
             {
                 if (errorCode != 0)
@@ -2234,6 +2236,8 @@ namespace Tsavorite.core
                 }
             }
             catch when (disposed) { }
+
+            Tsavorite.core.TraceEventSource.Tracer.AsyncFlushPageCallback_Out();
         }
 
         internal void UnsafeSkipError(CommitInfo info)

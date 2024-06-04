@@ -82,7 +82,9 @@ namespace Tsavorite.core
                 {
                     try
                     {
+                        Tsavorite.core.TraceEventSource.Tracer._work_In();
                         _work(workItem);
+                        Tsavorite.core.TraceEventSource.Tracer._work_Out();
                     }
                     catch { }
                     Interlocked.Decrement(ref _count);

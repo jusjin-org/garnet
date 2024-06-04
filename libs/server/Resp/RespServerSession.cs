@@ -216,6 +216,8 @@ namespace Garnet.server
 
         public override int TryConsumeMessages(byte* reqBuffer, int bytesReceived)
         {
+            Garnet.common.TraceEventSource.Tracer.TryConsumeMessages_In();
+
             bytesRead = bytesReceived;
             if (!txnManager.IsSkippingOperations())
                 readHead = 0;
@@ -263,7 +265,10 @@ namespace Garnet.server
             }
 
             if (txnManager.IsSkippingOperations())
+            {
+                Garnet.common.TraceEventSource.Tracer.UnexpectedEvent("TryConsumeMessages");
                 return 0; // so that network does not try to shift the byte array
+            }
 
             // If server processed input data successfully, update tracked metrics
             if (readHead > 0)
@@ -283,11 +288,16 @@ namespace Garnet.server
                 }
                 sessionMetrics?.incr_total_net_input_bytes((ulong)readHead);
             }
+
+            Garnet.common.TraceEventSource.Tracer.TryConsumeMessages_Out();
+
             return readHead;
         }
 
         private void ProcessMessages()
         {
+            Garnet.common.TraceEventSource.Tracer.ProcessMessages_In();
+
             // #if DEBUG
             // logger?.LogTrace("RECV: [{recv}]", Encoding.UTF8.GetString(new Span<byte>(recvBufferPtr, bytesRead)).Replace("\n", "|").Replace("\r", ""));
             // #endif
@@ -357,6 +367,8 @@ namespace Garnet.server
                     networkSender.DisposeNetworkSender(true);
                 }
             }
+
+            Garnet.common.TraceEventSource.Tracer.ProcessMessages_Out();
         }
 
         // Make first command in string as uppercase
@@ -385,7 +397,13 @@ namespace Garnet.server
         private bool ProcessBasicCommands<TGarnetApi>(RespCommand cmd, byte subcmd, int count, byte* ptr, ref TGarnetApi storageApi)
             where TGarnetApi : IGarnetApi
         {
-            if (!_authenticator.IsAuthenticated) return ProcessArrayCommands(cmd, subcmd, count, ref storageApi);
+            Garnet.common.TraceEventSource.Tracer.ProcessBasicCommands_In();
+
+            if (!_authenticator.IsAuthenticated)
+            {
+                Garnet.common.TraceEventSource.Tracer.UnexpectedEvent("ProcessBasicCommands");
+                return ProcessArrayCommands(cmd, subcmd, count, ref storageApi);
+            }
 
             bool success = cmd switch
             {
@@ -429,6 +447,9 @@ namespace Garnet.server
 
                 _ => ProcessArrayCommands(cmd, subcmd, count, ref storageApi)
             };
+
+            Garnet.common.TraceEventSource.Tracer.ProcessBasicCommands_Out();
+
             return success;
         }
 
@@ -799,6 +820,9 @@ namespace Garnet.server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SendAndReset()
         {
+
+            Garnet.common.TraceEventSource.Tracer.SendAndReset_In();
+
             byte* d = networkSender.GetResponseObjectHead();
             if ((int)(dcurr - d) > 0)
             {
@@ -814,6 +838,8 @@ namespace Garnet.server
                 // too large to fit in the response buffer.
                 GarnetException.Throw("Failed to write to response buffer", LogLevel.Critical);
             }
+
+            Garnet.common.TraceEventSource.Tracer.SendAndReset_Out();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -890,6 +916,8 @@ namespace Garnet.server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Send(byte* d)
         {
+            Garnet.common.TraceEventSource.Tracer.Send_In();
+
             // #if DEBUG
             // logger?.LogTrace("SEND: [{send}]", Encoding.UTF8.GetString(new Span<byte>(d, (int)(dcurr - d))).Replace("\n", "|").Replace("\r", ""));
             // #endif
@@ -899,13 +927,24 @@ namespace Garnet.server
                 // Debug.WriteLine("SEND: [" + Encoding.UTF8.GetString(new Span<byte>(d, (int)(dcurr - d))).Replace("\n", "|").Replace("\r", "!") + "]");
                 if (storeWrapper.appendOnlyFile != null && storeWrapper.serverOptions.WaitForCommit)
                 {
+                    Garnet.common.TraceEventSource.Tracer.WaitForCommitAsync_In();
+
                     var task = storeWrapper.appendOnlyFile.WaitForCommitAsync();
                     if (!task.IsCompleted) task.AsTask().GetAwaiter().GetResult();
+                    
+                    Garnet.common.TraceEventSource.Tracer.WaitForCommitAsync_Out();
                 }
+
+                Garnet.common.TraceEventSource.Tracer.SendResponse_In();
+
                 int sendBytes = (int)(dcurr - d);
                 networkSender.SendResponse((int)(d - networkSender.GetResponseObjectHead()), sendBytes);
                 sessionMetrics?.incr_total_net_output_bytes((ulong)sendBytes);
+
+                Garnet.common.TraceEventSource.Tracer.SendResponse_Out();
             }
+
+            Garnet.common.TraceEventSource.Tracer.Send_Out();
         }
 
         /// <summary>

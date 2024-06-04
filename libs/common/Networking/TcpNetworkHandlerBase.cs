@@ -107,10 +107,11 @@ namespace Garnet.common
 
         void RecvEventArg_Completed(object sender, SocketAsyncEventArgs e)
         {
+
+            Garnet.common.TraceEventSource.Tracer.RecvEventArg_Completed_In();
+
             try
             {
-                Garnet.common.TraceEventSource.Tracer.GenericEvent("TcpNetworkHandlerBase.RecvEventArg_Completed");
-
                 do
                 {
                     if (e.BytesTransferred == 0 || e.SocketError != SocketError.Success || serverHook.Disposed)
@@ -131,6 +132,8 @@ namespace Garnet.common
                     logger?.LogError(ex, "An error occurred at RecvEventArg_Completed");
                 Dispose(e);
             }
+
+            Garnet.common.TraceEventSource.Tracer.RecvEventArg_Completed_Out();
         }
 
         unsafe void AllocateNetworkReceiveBuffer()

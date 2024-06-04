@@ -2076,6 +2076,8 @@ namespace Tsavorite.core
 
         private void WriteCommitMetadata(TsavoriteLogRecoveryInfo recoveryInfo)
         {
+            Tsavorite.core.TraceEventSource.Tracer.WriteCommitMetadata_In();
+
             // TODO: can change to write this in separate thread for fast commit
 
             // If we are in fast-commit, we may not write every metadata to disk. However, when we are deleting files
@@ -2100,10 +2102,14 @@ namespace Tsavorite.core
                     epoch.Suspend();
                 }
             }
+
+            Tsavorite.core.TraceEventSource.Tracer.WriteCommitMetadata_In();
         }
 
         private void SerialCommitCallbackWorker(CommitInfo commitInfo)
         {
+            Tsavorite.core.TraceEventSource.Tracer.SerialCommitCallbackWorker_In();
+
             if (commitInfo.ErrorCode != 0)
             {
                 var exception = new CommitFailureException(new LinkedCommitInfo { CommitInfo = commitInfo },
@@ -2123,6 +2129,9 @@ namespace Tsavorite.core
                     // Make sure future waiters do not get a fresh tcs
                     commitTcs.TrySetException(cannedException);
                 }
+
+                Tsavorite.core.TraceEventSource.Tracer.UnexpectedEvent("SerialCommitCallbackWorker commit error");
+
                 return;
             }
             // Check for the commit records included in this flush
@@ -2140,7 +2149,11 @@ namespace Tsavorite.core
 
             // Nothing was committed --- this was probably an auto-flush. Return now without touching any
             // commit task tracking.
-            if (coveredCommits.Count == 0) return;
+            if (coveredCommits.Count == 0)
+            {
+                Tsavorite.core.TraceEventSource.Tracer.UnexpectedEvent("SerialCommitCallbackWorker no commit");
+                return;
+            }
 
             var latestCommit = coveredCommits[coveredCommits.Count - 1];
             if (fastCommitMode)
@@ -2177,6 +2190,8 @@ namespace Tsavorite.core
                 NextTask = commitTcs.Task
             };
             _commitTcs?.TrySetResult(lci);
+
+            Tsavorite.core.TraceEventSource.Tracer.SerialCommitCallbackWorker_Out();
         }
 
         private bool IteratorsChanged(ref TsavoriteLogRecoveryInfo info)

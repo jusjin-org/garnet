@@ -107,10 +107,14 @@ namespace Tsavorite.core
 
         void _callback(IntPtr context, int errorCode, ulong numBytes)
         {
+            Tsavorite.core.TraceEventSource.Tracer._callback_In();
+
             Interlocked.Decrement(ref numPending);
             var result = results[(int)context];
             result.callback((uint)errorCode, (uint)numBytes, result.context);
             freeResults.Enqueue((int)context);
+
+            Tsavorite.core.TraceEventSource.Tracer._callback_Out();
         }
 
         /// <inheritdoc />
@@ -131,6 +135,8 @@ namespace Tsavorite.core
                                       long capacity = Devices.CAPACITY_UNSPECIFIED, int numCompletionThreads = 1, ILogger logger = null)
                 : base(filename, GetSectorSize(filename), capacity)
         {
+            Tsavorite.core.TraceEventSource.Tracer.NativeStorageDevice_In();
+
             Debug.Assert(numCompletionThreads >= 1);
 
             // Native device uses a fixed segment size
@@ -166,6 +172,8 @@ namespace Tsavorite.core
                     thread.Start();
                 }
             }
+
+            Tsavorite.core.TraceEventSource.Tracer.NativeStorageDevice_Out();
         }
 
         /// <inheritdoc />
@@ -188,6 +196,8 @@ namespace Tsavorite.core
                                      DeviceIOCompletionCallback callback,
                                      object context)
         {
+            Tsavorite.core.TraceEventSource.Tracer.ReadAsync_In();
+
             int offset;
             while (!freeResults.TryDequeue(out offset))
             {
@@ -225,6 +235,8 @@ namespace Tsavorite.core
                 callback(uint.MaxValue, 0, context);
                 freeResults.Enqueue(offset);
             }
+
+            Tsavorite.core.TraceEventSource.Tracer.ReadAsync_Out();
         }
 
         /// <inheritdoc />
@@ -235,6 +247,8 @@ namespace Tsavorite.core
                                       DeviceIOCompletionCallback callback,
                                       object context)
         {
+            Tsavorite.core.TraceEventSource.Tracer.WriteAsync_In();
+
             int offset;
             while (!freeResults.TryDequeue(out offset))
             {
@@ -270,6 +284,8 @@ namespace Tsavorite.core
                 Interlocked.Decrement(ref numPending);
                 callback(uint.MaxValue, 0, context);
             }
+
+            Tsavorite.core.TraceEventSource.Tracer.WriteAsync_Out();
         }
 
         /// <summary>
@@ -287,8 +303,13 @@ namespace Tsavorite.core
         /// <param name="result"></param>
         public override void RemoveSegmentAsync(int segment, AsyncCallback callback, IAsyncResult result)
         {
+            Tsavorite.core.TraceEventSource.Tracer.RemoveSegment_In();
             RemoveSegment(segment);
+            Tsavorite.core.TraceEventSource.Tracer.RemoveSegment_Out();
+
+            Tsavorite.core.TraceEventSource.Tracer.RemoveSegmentAsync_cb_In();
             callback(result);
+            Tsavorite.core.TraceEventSource.Tracer.RemoveSegmentAsync_cb_Out();
         }
 
         /// <summary>
@@ -296,6 +317,8 @@ namespace Tsavorite.core
         /// </summary>
         public override void Dispose()
         {
+            Tsavorite.core.TraceEventSource.Tracer.Dispose_In();
+
             // Stop accepting new requests, drain all pending
             while (numPending >= 0)
             {
@@ -322,6 +345,8 @@ namespace Tsavorite.core
                 completionThreadToken.Dispose();
                 completionThreadSemaphore.Dispose();
             }
+
+            Tsavorite.core.TraceEventSource.Tracer.Dispose_Out();
         }
 
         /// <inheritdoc/>
@@ -351,7 +376,13 @@ namespace Tsavorite.core
                 while (true)
                 {
                     if (completionThreadToken.IsCancellationRequested) break;
+
+                    Tsavorite.core.TraceEventSource.Tracer.NativeDevice_QueueRun_In();
+
                     NativeDevice_QueueRun(nativeDevice, 5);
+
+                    Tsavorite.core.TraceEventSource.Tracer.NativeDevice_QueueRun_Out();
+                    
                     Thread.Yield();
                 }
             }

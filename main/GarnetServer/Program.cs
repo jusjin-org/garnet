@@ -14,9 +14,6 @@ namespace Garnet
     {
         static void Main(string[] args)
         {
-
-            Garnet.common.TraceEventSource.Tracer.GenericEvent("Starting Garnet server");
-
             try
             {
                 using var server = new GarnetServer(args);

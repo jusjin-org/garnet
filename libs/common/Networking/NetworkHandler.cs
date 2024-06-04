@@ -265,6 +265,9 @@ namespace Garnet.networking
         /// <param name="bytesTransferred">Number of bytes transferred</param>
         public unsafe void OnNetworkReceive(int bytesTransferred)
         {
+
+            Garnet.common.TraceEventSource.Tracer.OnNetworkReceive_In();
+
             // Wait for SslStream sync processing task to complete, if any
             if (sslStream != null)
                 while (readerStatus == TlsReaderStatus.Active) Thread.Yield();
@@ -301,6 +304,8 @@ namespace Garnet.networking
                 // Unblock the asynchronous ReadAsync task
                 receivedData.Release();
 
+                Garnet.common.TraceEventSource.Tracer.UnexpectedEvent("OnNetworkReceive_Out");
+
                 // Release this task - ReadAsync task will continue the processing
                 return;
             }
@@ -314,15 +319,21 @@ namespace Garnet.networking
             // Shift network buffer after processing is done
             if (networkReadHead > 0)
                 ShiftNetworkReceiveBuffer();
+
+            Garnet.common.TraceEventSource.Tracer.OnNetworkReceive_Out();
         }
 
         unsafe void Process()
         {
+            Garnet.common.TraceEventSource.Tracer.Process_In();
+
             if (transportBytesRead > 0)
             {
                 if (session != null || serverHook.TryCreateMessageConsumer(new Span<byte>(transportReceiveBufferPtr, transportBytesRead), GetNetworkSender(), out session))
                     TryProcessRequest();
             }
+
+            Garnet.common.TraceEventSource.Tracer.Process_Out();
         }
 
         /// <summary>
@@ -471,6 +482,8 @@ namespace Garnet.networking
 
         unsafe bool TryProcessRequest()
         {
+            Garnet.common.TraceEventSource.Tracer.TryProcessRequest_In();
+
             transportReadHead += session.TryConsumeMessages(transportReceiveBufferPtr + transportReadHead, transportBytesRead - transportReadHead);
 
             // We cannot shift or double transport buffer if a read may be waiting on
@@ -479,6 +492,9 @@ namespace Garnet.networking
             {
                 ShiftTransportReceiveBuffer();
             }
+
+            Garnet.common.TraceEventSource.Tracer.TryProcessRequest_Out();
+
             return true;
         }
 
