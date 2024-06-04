@@ -24,7 +24,7 @@ namespace Garnet.common
             }
         }
 
-        [Event(10, Message = "Unexpected event: {0}", Level = EventLevel.LogAlways)]
+        [Event(10, Message = "Unexpected Garnet event: {0}", Level = EventLevel.LogAlways)]
         public void UnexpectedEvent(string message)
         {
             if (IsEnabled())

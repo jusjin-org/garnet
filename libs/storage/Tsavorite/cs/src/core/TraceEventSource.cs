@@ -10,12 +10,12 @@ using System.Threading.Tasks;
 
 namespace Tsavorite.core
 {
-    [EventSource(Name = "Garnet.TraceEvents")]
+    [EventSource(Name = "Tsavorite.TraceEvents")]
     public class TraceEventSource : EventSource
     {
         public static TraceEventSource Tracer = new TraceEventSource();
 
-        [Event(1, Message = "Garnet generic event: {0}", Level = EventLevel.LogAlways)]
+        [Event(1, Message = "Tsavorite generic event: {0}", Level = EventLevel.LogAlways)]
         public void GenericEvent(string message)
         {
             if (IsEnabled())
@@ -24,7 +24,7 @@ namespace Tsavorite.core
             }
         }
 
-        [Event(10, Message = "Unexpected event: {0}", Level = EventLevel.LogAlways)]
+        [Event(10, Message = "Unexpected Tsavorite event: {0}", Level = EventLevel.LogAlways)]
         public void UnexpectedEvent(string message)
         {
             if (IsEnabled())
