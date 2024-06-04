@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,7 +16,8 @@ namespace Garnet.common
     {
         public static TraceEventSource Tracer = new TraceEventSource();
 
-        [Event(1, Message = "Garnet generic event: {0}", Level = EventLevel.LogAlways)]
+        [Event(1, Message = "{0}", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void GenericEvent(string message)
         {
             if (IsEnabled())
@@ -24,7 +26,8 @@ namespace Garnet.common
             }
         }
 
-        [Event(10, Message = "Unexpected Garnet event: {0}", Level = EventLevel.LogAlways)]
+        [Event(10, Message = "{0}", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UnexpectedEvent(string message)
         {
             if (IsEnabled())
@@ -37,286 +40,234 @@ namespace Garnet.common
         // RecvEventArg_Completed
         //
 
-        [Event(100, Message = "RecvEventArg_Completed_In", Level = EventLevel.LogAlways)]
+        //[Event(100, Message = "RecvEventArg_Completed_In", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RecvEventArg_Completed_In()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(100);
-            }
+            GenericEvent("RecvEventArg_Completed_In");
         }
 
-        [Event(101, Message = "RecvEventArg_Completed_Out", Level = EventLevel.LogAlways)]
+        //[Event(101, Message = "RecvEventArg_Completed_Out", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RecvEventArg_Completed_Out()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(101);
-            }
+            GenericEvent("RecvEventArg_Completed_Out");
         }
 
         //
         // OnNetworkReceive
         //
 
-        [Event(200, Message = "OnNetworkReceive_In", Level = EventLevel.LogAlways)]
+        //[Event(200, Message = "OnNetworkReceive_In", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnNetworkReceive_In()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(200);
-            }
+            GenericEvent("OnNetworkReceive_In");
         }
 
-        [Event(201, Message = "OnNetworkReceive_Out", Level = EventLevel.LogAlways)]
+        //[Event(201, Message = "OnNetworkReceive_Out", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnNetworkReceive_Out()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(201);
-            }
+            GenericEvent("OnNetworkReceive_Out");
         }
 
         //
         // Process
         //
 
-        [Event(300, Message = "Process_In", Level = EventLevel.LogAlways)]
+        //[Event(300, Message = "Process_In", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Process_In()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(300);
-            }
+            GenericEvent("Process_In");
         }
 
-        [Event(301, Message = "Process_Out", Level = EventLevel.LogAlways)]
+        //[Event(301, Message = "Process_Out", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Process_Out()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(301);
-            }
+            GenericEvent("Process_Out");
         }
 
         //
         // TryProcessRequest
         //
 
-        [Event(400, Message = "TryProcessRequest_In", Level = EventLevel.LogAlways)]
+        //[Event(400, Message = "TryProcessRequest_In", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void TryProcessRequest_In()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(400);
-            }
+            GenericEvent("TryProcessRequest_In");
         }
 
-        [Event(401, Message = "TryProcessRequest_Out", Level = EventLevel.LogAlways)]
+        //[Event(401, Message = "TryProcessRequest_Out", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void TryProcessRequest_Out()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(401);
-            }
+            GenericEvent("TryProcessRequest_Out");
         }
 
         //
         // TryConsumeMessages
         //
 
-        [Event(500, Message = "TryConsumeMessages_In", Level = EventLevel.LogAlways)]
+        //[Event(500, Message = "TryConsumeMessages_In", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void TryConsumeMessages_In()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(500);
-            }
+            GenericEvent("TryConsumeMessages_In");
         }
 
-        [Event(501, Message = "TryConsumeMessages_Out", Level = EventLevel.LogAlways)]
+        //[Event(501, Message = "TryConsumeMessages_Out", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void TryConsumeMessages_Out()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(501);
-            }
+            GenericEvent("TryConsumeMessages_Out");
         }
 
         //
         // ProcessMessages
         //
 
-        [Event(600, Message = "ProcessMessages_In", Level = EventLevel.LogAlways)]
+        //[Event(600, Message = "ProcessMessages_In", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ProcessMessages_In()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(600);
-            }
+            GenericEvent("ProcessMessages_In");
         }
 
-        [Event(601, Message = "ProcessMessages_Out", Level = EventLevel.LogAlways)]
+        //[Event(601, Message = "ProcessMessages_Out", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ProcessMessages_Out()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(601);
-            }
+            GenericEvent("ProcessMessages_Out");
         }
 
         //
         // ProcessBasicCommands
         //
 
-        [Event(700, Message = "ProcessBasicCommands_In", Level = EventLevel.LogAlways)]
+        //[Event(700, Message = "ProcessBasicCommands_In", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ProcessBasicCommands_In()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(700);
-            }
+            GenericEvent("ProcessBasicCommands_In");
         }
 
-        [Event(701, Message = "ProcessBasicCommands_Out", Level = EventLevel.LogAlways)]
+        //[Event(701, Message = "ProcessBasicCommands_Out", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ProcessBasicCommands_Out()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(701);
-            }
+            GenericEvent("ProcessBasicCommands_Out");
         }
 
         //
         // NetworkSET
         //
 
-        [Event(800, Message = "NetworkSET_In", Level = EventLevel.LogAlways)]
+        //[Event(800, Message = "NetworkSET_In", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NetworkSET_In()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(800);
-            }
+            GenericEvent("NetworkSET_In");
         }
 
-        [Event(801, Message = "NetworkSET_Out", Level = EventLevel.LogAlways)]
+        //[Event(801, Message = "NetworkSET_Out", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NetworkSET_Out()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(801);
-            }
+            GenericEvent("NetworkSET_Out");
         }
 
         //
         // SendAndReset
         //
 
-        [Event(900, Message = "SendAndReset_In", Level = EventLevel.LogAlways)]
+        //[Event(900, Message = "SendAndReset_In", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SendAndReset_In()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(900);
-            }
+            GenericEvent("SendAndReset_In");
         }
 
-        [Event(901, Message = "SendAndReset_Out", Level = EventLevel.LogAlways)]
+        //[Event(901, Message = "SendAndReset_Out", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SendAndReset_Out()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(901);
-            }
+            GenericEvent("SendAndReset_Out");
         }
 
         //
         // Send
         //
 
-        [Event(1000, Message = "Send_In", Level = EventLevel.LogAlways)]
+        //[Event(1000, Message = "Send_In", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Send_In()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(1000);
-            }
+            GenericEvent("Send_In");
         }
 
-        [Event(1001, Message = "Send_Out", Level = EventLevel.LogAlways)]
+        //[Event(1001, Message = "Send_Out", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Send_Out()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(1001);
-            }
+            GenericEvent("Send_Out");
         }
 
         //
         // WaitForCommitAsync
         //
 
-        [Event(1100, Message = "WaitForCommitAsync_In", Level = EventLevel.LogAlways)]
+        //[Event(1100, Message = "WaitForCommitAsync_In", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WaitForCommitAsync_In()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(1100);
-            }
+            GenericEvent("WaitForCommitAsync_In");
         }
 
-        [Event(1101, Message = "WaitForCommitAsync_Out", Level = EventLevel.LogAlways)]
+        //[Event(1101, Message = "WaitForCommitAsync_Out", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WaitForCommitAsync_Out()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(1101);
-            }
+            GenericEvent("WaitForCommitAsync_Out");
         }
 
         //
         // SendResponse
         //
 
-        [Event(1200, Message = "SendResponse_In", Level = EventLevel.LogAlways)]
+        //[Event(1200, Message = "SendResponse_In", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SendResponse_In()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(1200);
-            }
+            GenericEvent("SendResponse_In");
         }
 
-        [Event(1201, Message = "SendResponse_Out", Level = EventLevel.LogAlways)]
+        //[Event(1201, Message = "SendResponse_Out", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SendResponse_Out()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(1201);
-            }
+            GenericEvent("SendResponse_Out");
         }
 
         //
         // SET
         //
 
-        [Event(1300, Message = "SET_In", Level = EventLevel.LogAlways)]
+        //[Event(1300, Message = "SET_In", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SET_In()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(1300);
-            }
+            GenericEvent("SET_In");
         }
 
-        [Event(1301, Message = "SET_Out", Level = EventLevel.LogAlways)]
+        //[Event(1301, Message = "SET_Out", Level = EventLevel.LogAlways)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SET_Out()
         {
-            if (IsEnabled())
-            {
-                WriteEvent(1301);
-            }
+            GenericEvent("SET_Out");
         }
     }
 }
