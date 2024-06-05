@@ -59,13 +59,13 @@ namespace Tsavorite.core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void _callback_In()
         {
-            GenericEvent("_callback_In");
+            //GenericEvent("_callback_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void _callback_Out()
         {
-            GenericEvent("_callback_Out");
+            //GenericEvent("_callback_Out");
         }
 
         //
@@ -75,13 +75,13 @@ namespace Tsavorite.core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NativeStorageDevice_In()
         {
-            GenericEvent("NativeStorageDevice_In");
+            //GenericEvent("NativeStorageDevice_In");
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NativeStorageDevice_Out()
         {
-            GenericEvent("NativeStorageDevice_Out");
+            //GenericEvent("NativeStorageDevice_Out");
         }
 
         //
@@ -91,13 +91,13 @@ namespace Tsavorite.core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReadAsync_In()
         {
-            GenericEvent("ReadAsync_In");
+            //GenericEvent("ReadAsync_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReadAsync_Out()
         {
-            GenericEvent("ReadAsync_Out");
+            //GenericEvent("ReadAsync_Out");
         }
 
         //
@@ -123,13 +123,13 @@ namespace Tsavorite.core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveSegment_In()
         {
-            GenericEvent("RemoveSegment_In");
+            //GenericEvent("RemoveSegment_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveSegment_Out()
         {
-            GenericEvent("RemoveSegment_Out");
+            //GenericEvent("RemoveSegment_Out");
         }
 
         //
@@ -139,13 +139,13 @@ namespace Tsavorite.core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveSegmentAsync_cb_In()
         {
-            GenericEvent("RemoveSegmentAsync_cb_In");
+            //GenericEvent("RemoveSegmentAsync_cb_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveSegmentAsync_cb_Out()
         {
-            GenericEvent("RemoveSegmentAsync_cb_Out");
+            //GenericEvent("RemoveSegmentAsync_cb_Out");
         }
 
         //
@@ -155,13 +155,13 @@ namespace Tsavorite.core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose_In()
         {
-            GenericEvent("Dispose_In");
+            //GenericEvent("Dispose_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose_Out()
         {
-            GenericEvent("Dispose_Out");
+            //GenericEvent("Dispose_Out");
         }
 
         //
@@ -187,13 +187,13 @@ namespace Tsavorite.core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void _work_In()
         {
-            GenericEvent("_work_In");
+            //GenericEvent("_work_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void _work_Out()
         {
-            GenericEvent("_work_Out");
+            //GenericEvent("_work_Out");
         }
 
         //
@@ -219,13 +219,13 @@ namespace Tsavorite.core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteCommitMetadata_In()
         {
-            GenericEvent("WriteCommitMetadata_In");
+            //GenericEvent("WriteCommitMetadata_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteCommitMetadata_Out()
         {
-            GenericEvent("WriteCommitMetadata_Out");
+            //GenericEvent("WriteCommitMetadata_Out");
         }
     }
 }

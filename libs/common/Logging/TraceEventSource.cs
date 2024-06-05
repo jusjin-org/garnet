@@ -43,13 +43,13 @@ namespace Garnet.common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RecvEventArg_Completed_In()
         {
-            GenericEvent("RecvEventArg_Completed_In");
+            //GenericEvent("RecvEventArg_Completed_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RecvEventArg_Completed_Out()
         {
-            GenericEvent("RecvEventArg_Completed_Out");
+            //GenericEvent("RecvEventArg_Completed_Out");
         }
 
         //
@@ -75,13 +75,13 @@ namespace Garnet.common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Process_In()
         {
-            GenericEvent("Process_In");
+            //GenericEvent("Process_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Process_Out()
         {
-            GenericEvent("Process_Out");
+            //GenericEvent("Process_Out");
         }
 
         //
@@ -91,13 +91,13 @@ namespace Garnet.common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void TryProcessRequest_In()
         {
-            GenericEvent("TryProcessRequest_In");
+            //GenericEvent("TryProcessRequest_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void TryProcessRequest_Out()
         {
-            GenericEvent("TryProcessRequest_Out");
+            //GenericEvent("TryProcessRequest_Out");
         }
 
         //
@@ -107,13 +107,13 @@ namespace Garnet.common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void TryConsumeMessages_In()
         {
-            GenericEvent("TryConsumeMessages_In");
+            //GenericEvent("TryConsumeMessages_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void TryConsumeMessages_Out()
         {
-            GenericEvent("TryConsumeMessages_Out");
+            //GenericEvent("TryConsumeMessages_Out");
         }
 
         //
@@ -123,13 +123,13 @@ namespace Garnet.common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ProcessMessages_In()
         {
-            GenericEvent("ProcessMessages_In");
+            //GenericEvent("ProcessMessages_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ProcessMessages_Out()
         {
-            GenericEvent("ProcessMessages_Out");
+            //GenericEvent("ProcessMessages_Out");
         }
 
         //
@@ -139,13 +139,13 @@ namespace Garnet.common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ProcessBasicCommands_In()
         {
-            GenericEvent("ProcessBasicCommands_In");
+            //GenericEvent("ProcessBasicCommands_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ProcessBasicCommands_Out()
         {
-            GenericEvent("ProcessBasicCommands_Out");
+            //GenericEvent("ProcessBasicCommands_Out");
         }
 
         //
@@ -155,13 +155,13 @@ namespace Garnet.common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NetworkSET_In()
         {
-            GenericEvent("NetworkSET_In");
+            //GenericEvent("NetworkSET_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NetworkSET_Out()
         {
-            GenericEvent("NetworkSET_Out");
+            //GenericEvent("NetworkSET_Out");
         }
 
         //
@@ -171,13 +171,13 @@ namespace Garnet.common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SendAndReset_In()
         {
-            GenericEvent("SendAndReset_In");
+            //GenericEvent("SendAndReset_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SendAndReset_Out()
         {
-            GenericEvent("SendAndReset_Out");
+            //GenericEvent("SendAndReset_Out");
         }
 
         //
@@ -187,13 +187,13 @@ namespace Garnet.common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Send_In()
         {
-            GenericEvent("Send_In");
+            //GenericEvent("Send_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Send_Out()
         {
-            GenericEvent("Send_Out");
+            //GenericEvent("Send_Out");
         }
 
         //
@@ -219,13 +219,13 @@ namespace Garnet.common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SendResponse_In()
         {
-            GenericEvent("SendResponse_In");
+            //GenericEvent("SendResponse_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SendResponse_Out()
         {
-            GenericEvent("SendResponse_Out");
+            //GenericEvent("SendResponse_Out");
         }
 
         //
@@ -235,13 +235,13 @@ namespace Garnet.common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SET_In()
         {
-            GenericEvent("SET_In");
+            //GenericEvent("SET_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SET_Out()
         {
-            GenericEvent("SET_Out");
+            //GenericEvent("SET_Out");
         }
     }
 }
