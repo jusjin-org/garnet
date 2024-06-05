@@ -16,7 +16,7 @@ namespace Tsavorite.core
     {
         public static TraceEventSource Tracer = new TraceEventSource();
 
-        [Event(1, Message = "{0}", Level = EventLevel.LogAlways)]
+        //[Event(1, Message = "{0}", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void GenericEvent(string message)
         {
@@ -26,7 +26,7 @@ namespace Tsavorite.core
             }
         }
 
-        [Event(10000, Message = "{0}", Level = EventLevel.LogAlways)]
+        //[Event(10000, Message = "{0}", Level = EventLevel.LogAlways)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UnexpectedEvent(string message)
         {
