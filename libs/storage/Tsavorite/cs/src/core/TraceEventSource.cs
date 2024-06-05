@@ -107,13 +107,13 @@ namespace Tsavorite.core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteAsync_In()
         {
-            GenericEvent("WriteAsync_In");
+            GenericEvent("WR_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteAsync_Out()
         {
-            GenericEvent("WriteAsync_Out");
+            GenericEvent("WR_Out");
         }
 
         //
@@ -171,13 +171,13 @@ namespace Tsavorite.core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AsyncFlushPageCallback_In()
         {
-            GenericEvent("AsyncFlushPageCallback_In");
+            GenericEvent("CB1_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AsyncFlushPageCallback_Out()
         {
-            GenericEvent("AsyncFlushPageCallback_Out");
+            GenericEvent("CB1_Out");
         }
 
         //
@@ -203,13 +203,13 @@ namespace Tsavorite.core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SerialCommitCallbackWorker_In()
         {
-            GenericEvent("SerialCommitCallbackWorker_In");
+            GenericEvent("CB2_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SerialCommitCallbackWorker_Out()
         {
-            GenericEvent("SerialCommitCallbackWorker_Out");
+            GenericEvent("CB2_Out");
         }
 
         //

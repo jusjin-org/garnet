@@ -59,13 +59,13 @@ namespace Garnet.common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnNetworkReceive_In()
         {
-            GenericEvent("OnNetworkReceive_In");
+            GenericEvent("NET_In");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnNetworkReceive_Out()
         {
-            GenericEvent("OnNetworkReceive_Out");
+            GenericEvent("NET_Out");
         }
 
         //
