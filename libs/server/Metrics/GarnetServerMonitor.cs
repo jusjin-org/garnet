@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Garnet.common;
 using Microsoft.Extensions.Logging;
+using Tsavorite.core;
 
 namespace Garnet.server
 {
@@ -243,6 +244,31 @@ namespace Garnet.server
             }
         }
 
+        private void update_io_latency_metrics(IGarnetServer server)
+        {
+            GarnetServerTcp garnet_server = server as GarnetServerTcp;
+            SPDKDevice aof_device = garnet_server.get_spdk_aof_device();
+            this.globalMetrics.globalLatencyMetrics.add_metrics(
+                LatencyMetricsType.STORE_IO_SUBMIT,
+                aof_device.get_io_submit_metric()
+            );
+            this.globalMetrics.globalLatencyMetrics.add_metrics(
+                LatencyMetricsType.STORE_IO,
+                aof_device.get_io_metric()
+            );
+            this.globalMetrics.globalLatencyMetrics.add_metrics(
+                LatencyMetricsType.STORE_CALLBACK,
+                aof_device.get_callback_metric()
+            );
+        }
+
+        private void reset_io_latency_metrics(IGarnetServer server)
+        {
+            GarnetServerTcp garnet_server = server as GarnetServerTcp;
+            SPDKDevice aof_device = garnet_server.get_spdk_aof_device();
+            aof_device.reset_metrics();
+        }
+
         private async void MainMonitorTask(CancellationToken token)
         {
             startTimestamp = Stopwatch.GetTimestamp();
@@ -265,10 +291,12 @@ namespace Garnet.server
                     UpdateInstantaneousMetrics();
                     UpdateAllMetricsHistory();
                     UpdateAllMetrics(server);
+                    update_io_latency_metrics(this.server);
 
                     //Reset & Cleanup
                     ResetStats();
                     ResetLatencyMetrics();
+                    reset_io_latency_metrics(this.server);
                 }
             }
             catch (Exception ex)

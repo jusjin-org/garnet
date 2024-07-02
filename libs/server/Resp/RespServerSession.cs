@@ -296,6 +296,7 @@ namespace Garnet.server
 
             while (bytesRead - readHead >= 4)
             {
+                this.latencyMetrics?.Start(LatencyMetricsType.REQ_COMMAND);
                 // NOTE: Possible optimization: Don't parse if only parsing AUTH and not authenticated.
                 (RespCommand cmd, byte subcmd) = ParseCommand(out int count, recvBufferPtr + readHead, out bool success);
 
@@ -332,6 +333,7 @@ namespace Garnet.server
                             SendAndReset();
                     }
                 }
+                this.latencyMetrics?.Stop(LatencyMetricsType.REQ_COMMAND);
                 if (!success) break;
                 if (latencyMetrics != null) opCount++;
                 if (sessionMetrics != null)
@@ -867,7 +869,7 @@ namespace Garnet.server
                 // Compute space left on output buffer
                 int destSpace = (int)(dend - dcurr);
 
-                // Fast path if there is enough space 
+                // Fast path if there is enough space
                 if (src.Length <= destSpace)
                 {
                     src.CopyTo(new Span<byte>(dcurr, src.Length));
@@ -899,8 +901,10 @@ namespace Garnet.server
                 // Debug.WriteLine("SEND: [" + Encoding.UTF8.GetString(new Span<byte>(d, (int)(dcurr - d))).Replace("\n", "|").Replace("\r", "!") + "]");
                 if (storeWrapper.appendOnlyFile != null && storeWrapper.serverOptions.WaitForCommit)
                 {
+                    this.latencyMetrics.Start(LatencyMetricsType.REQ_WAIT_COMMIT);
                     var task = storeWrapper.appendOnlyFile.WaitForCommitAsync();
                     if (!task.IsCompleted) task.AsTask().GetAwaiter().GetResult();
+                    this.latencyMetrics.Stop(LatencyMetricsType.REQ_WAIT_COMMIT);
                 }
                 int sendBytes = (int)(dcurr - d);
                 networkSender.SendResponse((int)(d - networkSender.GetResponseObjectHead()), sendBytes);

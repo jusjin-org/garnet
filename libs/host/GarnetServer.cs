@@ -273,7 +273,7 @@ namespace Garnet
             // Create Garnet TCP server if none was provided.
             if (this.server == null)
             {
-                server = new GarnetServerTcp(opts.Address, opts.Port, 0, opts.TlsOptions, opts.NetworkSendThrottleMax, logger);
+                server = new GarnetServerTcp(opts.Address, opts.Port, this.aofDevice, 0, opts.TlsOptions, opts.NetworkSendThrottleMax, logger);
             }
 
             storeWrapper = new StoreWrapper(version, redisProtocolVersion, server, store, objectStore, objectStoreSizeTracker, customCommandManager, appendOnlyFile, opts, clusterFactory: clusterFactory, loggerFactory: loggerFactory);

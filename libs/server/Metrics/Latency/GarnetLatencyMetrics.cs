@@ -35,6 +35,14 @@ namespace Garnet.server
                 metrics[(int)cmd] = new LatencyMetricsEntry();
         }
 
+        public void add_metrics(LatencyMetricsType latency_type, HistogramBase latency)
+        {
+            if (latency.TotalCount > 0)
+            {
+                this.metrics[(int)latency_type].latency.Add(latency);
+            }
+        }
+
         public void Merge(GarnetLatencyMetricsSession lm)
         {
             if (lm.metrics == null) return;

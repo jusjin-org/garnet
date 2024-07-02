@@ -7,6 +7,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using HdrHistogram;
+using System.Collections.Generic;
 
 namespace Tsavorite.core
 {
@@ -32,6 +34,11 @@ namespace Tsavorite.core
         private ConcurrentQueue<IntPtr> spdk_device_queue =
                                           new ConcurrentQueue<IntPtr>();
         private AsyncIOCallback _callback_delegate;
+
+        private LongHistogram[] io_submit_metric = { new(1, TimeStamp.Seconds(100), 2), new(1, TimeStamp.Seconds(100), 2) };
+        private LongHistogram[] io_metric = { new(1, TimeStamp.Seconds(100), 2), new(1, TimeStamp.Seconds(100), 2) };
+        private LongHistogram[] callback_metric = { new(1, TimeStamp.Seconds(100), 2), new(1, TimeStamp.Seconds(100), 2) };
+        private int metrics_version = 0;
 
         class ManagedCallback
         {
@@ -150,6 +157,29 @@ namespace Tsavorite.core
             }
 
             begin_poller();
+        }
+
+        public LongHistogram get_io_submit_metric()
+        {
+            return this.io_submit_metric[this.metrics_version];
+        }
+
+        public LongHistogram get_io_metric()
+        {
+            return this.io_metric[this.metrics_version];
+        }
+
+        public LongHistogram get_callback_metric()
+        {
+            return this.callback_metric[this.metrics_version];
+        }
+
+        public void reset_metrics()
+        {
+            this.io_submit_metric[this.metrics_version].Reset();
+            this.io_metric[this.metrics_version].Reset();
+            this.callback_metric[this.metrics_version].Reset();
+            this.metrics_version = (this.metrics_version + 1) % 2;
         }
 
         public override bool Throttle() => this.num_pending > ThrottleLimit;

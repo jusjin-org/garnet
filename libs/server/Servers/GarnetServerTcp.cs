@@ -10,6 +10,7 @@ using Garnet.common;
 using Garnet.networking;
 using Garnet.server.TLS;
 using Microsoft.Extensions.Logging;
+using Tsavorite.core;
 
 namespace Garnet.server
 {
@@ -23,6 +24,7 @@ namespace Garnet.server
         readonly IGarnetTlsOptions tlsOptions;
         readonly int networkSendThrottleMax;
         readonly LimitedFixedBufferPool networkPool;
+        private readonly SPDKDevice aof_device;
 
         /// <summary>
         /// Get active consumers
@@ -59,9 +61,10 @@ namespace Garnet.server
         /// <param name="tlsOptions"></param>
         /// <param name="networkSendThrottleMax"></param>
         /// <param name="logger"></param>
-        public GarnetServerTcp(string address, int port, int networkBufferSize = default, IGarnetTlsOptions tlsOptions = null, int networkSendThrottleMax = 8, ILogger logger = null)
+        public GarnetServerTcp(string address, int port, IDevice aof_device, int networkBufferSize = default, IGarnetTlsOptions tlsOptions = null, int networkSendThrottleMax = 8, ILogger logger = null)
             : base(address, port, networkBufferSize, logger)
         {
+            this.aof_device = aof_device as SPDKDevice;
             this.tlsOptions = tlsOptions;
             this.networkSendThrottleMax = networkSendThrottleMax;
             this.networkPool = new LimitedFixedBufferPool(BufferSizeUtils.ServerBufferSize(new MaxSizeSettings()), logger: logger);
@@ -94,6 +97,11 @@ namespace Garnet.server
             servSocket.Listen(512);
             if (!servSocket.AcceptAsync(acceptEventArg))
                 AcceptEventArg_Completed(null, acceptEventArg);
+        }
+
+        public SPDKDevice get_spdk_aof_device()
+        {
+            return this.aof_device;
         }
 
         private void AcceptEventArg_Completed(object sender, SocketAsyncEventArgs e)
@@ -162,7 +170,7 @@ namespace Garnet.server
         {
             session = null;
 
-            // We need at least 4 bytes to determine session            
+            // We need at least 4 bytes to determine session
             if (bytes.Length < 4)
                 return false;
 
