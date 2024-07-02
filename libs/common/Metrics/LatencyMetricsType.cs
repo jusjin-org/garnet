@@ -6,7 +6,7 @@ namespace Garnet.common
     /// <summary>
     /// Types of latency metrics exposed by Garnet server
     /// </summary>
-    public enum LatencyMetricsType : byte
+    public enum LatencyMetricsType : int
     {
         /// <summary>
         /// Latency of processing, per network receive call (server side) - consider batches with only non-admin requests
@@ -36,5 +36,13 @@ namespace Garnet.common
         /// Ops processed, per network receive call (server side)
         /// </summary>
         NET_RS_OPS = 4,
+
+        STORE_IO_SUBMIT = 6,
+        STORE_IO = 7,
+        STORE_CALLBACK = 8,
+
+        REQ_COMMAND = 9,
+        REQ_AOF_ENQUEUE = 10,
+        REQ_WAIT_COMMIT = 11,
     }
 }
