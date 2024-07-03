@@ -20,12 +20,6 @@ namespace Tsavorite.core
 
         private int num_pending = 0;
 
-        private long elapsed_ticks = 0;
-        private uint io_num = 0;
-        private ulong io_size = 0;
-        private long nanosec_per_tick =
-                       (1000L * 1000L * 1000L) / Stopwatch.Frequency;
-
         private const string spdk_library_name = "spdk_device";
         private const string spdk_library_path =
                                "runtimes/linux-x64/native/libspdk_device.so";
@@ -45,7 +39,7 @@ namespace Tsavorite.core
             public readonly IntPtr spdk_device;
             private DeviceIOCompletionCallback callback;
             private object context;
-            public readonly Stopwatch stop_watch;
+            public readonly long start_timestamp;
 
             public ManagedCallback(IntPtr spdk_device,
                                    DeviceIOCompletionCallback callback,
@@ -54,8 +48,7 @@ namespace Tsavorite.core
                 this.spdk_device = spdk_device;
                 this.callback = callback;
                 this.context = context;
-                this.stop_watch = new Stopwatch();
-                this.stop_watch.Start();
+                this.start_timestamp = Stopwatch.GetTimestamp();
             }
 
             public void call(uint error_code, uint num_bytes)
@@ -71,19 +64,19 @@ namespace Tsavorite.core
             {
                 error_code = -error_code;
             }
+            long callback_start_timestamp = Stopwatch.GetTimestamp();
             GCHandle handle = GCHandle.FromIntPtr(context);
             ManagedCallback managed_callback =
                                 (handle.Target as ManagedCallback);
-            managed_callback.stop_watch.Stop();
-            Interlocked.Add(ref this.io_num, 1);
-            Interlocked.Add(
-                ref this.elapsed_ticks,
-                managed_callback.stop_watch.ElapsedTicks
-            );
-            Interlocked.Add(ref this.io_size, num_bytes);
-
             this.spdk_device_queue.Enqueue(managed_callback.spdk_device);
             managed_callback.call((uint)error_code, (uint)num_bytes);
+            long callback_end_timestamp = Stopwatch.GetTimestamp();
+            this.io_metric[this.metrics_version].RecordValue(
+                callback_start_timestamp - managed_callback.start_timestamp
+            );
+            this.callback_metric[this.metrics_version].RecordValue(
+                callback_end_timestamp - callback_start_timestamp
+            );
             handle.Free();
         }
 
@@ -247,6 +240,7 @@ namespace Tsavorite.core
                 throw new Exception("Cannot operate on disposed device");
             }
 
+            long io_submit_start_timestamp = Stopwatch.GetTimestamp();
             try
             {
                 IntPtr spdk_device;
@@ -271,6 +265,10 @@ namespace Tsavorite.core
                     throw new IOException("Error writing to log file",
                                           _result);
                 }
+                long io_submit_end_timestamp = Stopwatch.GetTimestamp();
+                this.io_submit_metric[this.metrics_version].RecordValue(
+                    io_submit_end_timestamp - io_submit_start_timestamp
+                );
             }
             catch (IOException e)
             {
