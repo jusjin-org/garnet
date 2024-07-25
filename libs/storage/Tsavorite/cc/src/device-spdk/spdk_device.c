@@ -3,16 +3,15 @@
 #include "spdk_device.h"
 
 #include <error.h>
+#include <rte_ring.h>
 #include <threads.h>
 #include <time.h>
 
 #define DEVICE_MAX_NUM 16
 #define NS_MAX_NUM 8
-#define SIZE_4K (4 * 1024)
-#define SIZE_1G (1 * 1024 * 1024 * 1024)
-#define SECTOR_SIZE SIZE_4K
 #define IO_BATCH_NUM 8
 #define POLL_TIME 64
+#define SIZE_1G (1 * 1024 * 1024 * 1024)
 
 volatile static bool initted = false;
 static pthread_mutex_t module_init_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -25,16 +24,21 @@ volatile static int32_t device_num = 0;
 static struct spdk_device g_spdk_device_list[DEVICE_MAX_NUM];
 static pthread_mutex_t device_init_lock = PTHREAD_MUTEX_INITIALIZER;
 
+struct rte_ring *g_io_ring = NULL;
+
 static pthread_t poller_thread;
 
 struct internal_io_context {
     struct spdk_device *device;
+    uint64_t target_lba;
+    uint32_t lba_count;
     void *buffer;
-    int32_t io_length;
     void *read_dest;
     AsyncIOCallback complete_callback;
     void *complete_callback_context;
 };
+
+void put_internal_io_context(struct internal_io_context *io_context);
 
 static int32_t register_ns(struct spdk_nvme_ctrlr *ctrlr,
                            struct spdk_nvme_ns *ns, int nsid)
@@ -53,6 +57,8 @@ static int32_t register_ns(struct spdk_nvme_ctrlr *ctrlr,
     entry = &g_spdk_ns_list[ns_num++];
     entry->ctrlr = ctrlr;
     entry->ns = ns;
+    entry->ns_sector_size = spdk_nvme_ns_get_sector_size(ns);
+    entry->ns_size = entry->ns_sector_size * spdk_nvme_ns_get_num_sectors(ns);
     entry->nsid = nsid;
     return 0;
 }
@@ -101,13 +107,14 @@ static void cleanup()
     }
 }
 
-int spdk_device_init()
+int init()
 {
     int rc = 0;
     pthread_mutex_lock(&module_init_lock);
     if (initted) {
         goto exit;
     }
+    spdk_log_set_print_level(SPDK_LOG_DEBUG);
     struct spdk_env_opts opts;
     spdk_env_opts_init(&opts);
     opts.name = "garnet_spdk_device";
@@ -136,6 +143,9 @@ int spdk_device_init()
         rc = 1;
         goto exit;
     }
+
+    g_io_ring = rte_ring_create("io_ring", 2048, SOCKET_ID_ANY, RING_F_SC_DEQ);
+
     initted = true;
 exit:
     if (rc == 0) {
@@ -201,20 +211,31 @@ static void io_complete(void *arg, const struct spdk_nvme_cpl *completion)
     } else {
         if (io_context->read_dest != NULL) {
             memcpy(io_context->read_dest, io_context->buffer,
-                   io_context->io_length);
+                   io_context->lba_count *
+                       io_context->device->ns_entry->ns_sector_size);
         }
-        bytes_transferred = io_context->io_length;
+        bytes_transferred = io_context->lba_count *
+                            io_context->device->ns_entry->ns_sector_size;
     }
 
-    spdk_free(io_context->buffer);
-    free(io_context);
+    put_internal_io_context(io_context);
     callback(callback_context, (int32_t)rc, bytes_transferred);
 }
 
+uint64_t spdk_device_get_ns_size(struct spdk_device *device)
+{
+    return device->ns_entry->ns_size;
+}
+
+uint32_t spdk_device_get_ns_sector_size(struct spdk_device *device)
+{
+    return device->ns_entry->ns_sector_size;
+}
+
 static struct internal_io_context *
-get_internal_io_context(struct spdk_device *device, uint32_t io_length,
-                        void *read_dest, AsyncIOCallback callback,
-                        void *context)
+get_internal_io_context(struct spdk_device *device, uint64_t target_address,
+                        uint32_t io_length, void *read_dest,
+                        AsyncIOCallback callback, void *context)
 {
     struct internal_io_context *io_context = NULL;
 
@@ -222,14 +243,16 @@ get_internal_io_context(struct spdk_device *device, uint32_t io_length,
     if (io_context == NULL) {
         goto exit;
     }
-    io_context->buffer = spdk_malloc(io_length, SIZE_4K, NULL,
-                                     SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+    io_context->buffer =
+        spdk_malloc(io_length, device->ns_entry->ns_sector_size, NULL,
+                    SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
     if (io_context->buffer == NULL) {
         free(io_context);
         io_context = NULL;
         goto exit;
     }
-    io_context->io_length = io_length;
+    io_context->target_lba = target_address / device->ns_entry->ns_sector_size;
+    io_context->lba_count = io_length / device->ns_entry->ns_sector_size;
     io_context->read_dest = read_dest;
     io_context->complete_callback = callback;
     io_context->complete_callback_context = context;
@@ -239,6 +262,12 @@ exit:
     return io_context;
 }
 
+void put_internal_io_context(struct internal_io_context *io_context)
+{
+    spdk_free(io_context->buffer);
+    free(io_context);
+}
+
 int32_t spdk_device_read_async(struct spdk_device *device, uint64_t source,
                                void *dest, uint32_t length,
                                AsyncIOCallback callback, void *callback_context)
@@ -246,34 +275,27 @@ int32_t spdk_device_read_async(struct spdk_device *device, uint64_t source,
     struct internal_io_context *io_context = NULL;
     int rc = 0;
 
-    if (length % SECTOR_SIZE != 0) {
+    uint32_t ns_sector_size = device->ns_entry->ns_sector_size;
+    if (length % ns_sector_size != 0) {
         fprintf(stderr,
                 "ERROR: io size %d is not sector align, sector size is %d.\n",
-                length, SECTOR_SIZE);
+                length, ns_sector_size);
         rc = EINVAL;
         goto exit;
     }
 
-    io_context = get_internal_io_context(device, length, dest, callback,
+    io_context = get_internal_io_context(device, source, length, dest, callback,
                                          callback_context);
     if (io_context == NULL) {
         rc = ENOMEM;
         goto exit;
     }
-
-    rc = spdk_nvme_ns_cmd_read(device->ns_entry->ns, device->qpair,
-                               io_context->buffer, source / SECTOR_SIZE,
-                               length / SECTOR_SIZE, io_complete,
-                               (void *)io_context, 0);
-    if (rc != 0) {
-        fprintf(stderr, "ERROR: starting read I/O failed with %d.\n", rc);
-    }
+    rc = rte_ring_enqueue(g_io_ring, (void *)io_context);
 
 exit:
     if (rc != 0) {
         if (io_context != NULL) {
-            spdk_free(io_context->buffer);
-            free(io_context);
+            put_internal_io_context(io_context);
         }
     }
 
@@ -288,35 +310,28 @@ int32_t spdk_device_write_async(struct spdk_device *device, const void *source,
     struct internal_io_context *io_context = NULL;
     int rc = 0;
 
-    if (length % SECTOR_SIZE != 0) {
+    uint32_t ns_sector_size = device->ns_entry->ns_sector_size;
+    if (length % ns_sector_size != 0) {
         fprintf(stderr,
                 "ERROR: io size %d is not sector align, sector size is %d.\n",
-                length, SECTOR_SIZE);
+                length, ns_sector_size);
         rc = EINVAL;
         goto exit;
     }
 
-    io_context = get_internal_io_context(device, length, NULL, callback,
+    io_context = get_internal_io_context(device, dest, length, NULL, callback,
                                          callback_context);
     if (io_context == NULL) {
         rc = ENOMEM;
         goto exit;
     }
     memcpy(io_context->buffer, source, length);
-
-    rc = spdk_nvme_ns_cmd_write(device->ns_entry->ns, device->qpair,
-                                io_context->buffer, dest / SECTOR_SIZE,
-                                length / SECTOR_SIZE, io_complete,
-                                (void *)io_context, 0);
-    if (rc != 0) {
-        fprintf(stderr, "ERROR: starting write I/O failed with %d.\n", rc);
-    }
+    rc = rte_ring_enqueue(g_io_ring, (void *)io_context);
 
 exit:
     if (rc != 0) {
         if (io_context != NULL) {
-            spdk_free(io_context->buffer);
-            free(io_context);
+            put_internal_io_context(io_context);
         }
     }
 
@@ -355,20 +370,45 @@ void begin_poller()
 int32_t spdk_device_poll(uint32_t timeout)
 {
     static int qp_pointer = 0;
+    static struct internal_io_context *pending_io[256];
     int n = 0;
     int t = 0;
-    struct spdk_device *device = NULL;
 
     // clock_t start = 0, diff = 0;
     // start = clock();
-
     while (true) {
-        // printf("device_num: %d\n", device_num);
+
+        // submit IO.
+        int rc;
+        uint32_t pending_io_num = rte_ring_dequeue_burst(
+            g_io_ring, (void **)pending_io,
+            sizeof(pending_io) / sizeof(struct internal_io_context *), NULL);
+
+        for (int i = 0; i < pending_io_num; i++) {
+            struct internal_io_context *io = pending_io[i];
+            struct spdk_device *device = io->device;
+            if (io->read_dest) {
+                rc = spdk_nvme_ns_cmd_read(
+                    device->ns_entry->ns, device->qpair, io->buffer,
+                    io->target_lba, io->lba_count, io_complete, (void *)io, 0);
+            } else {
+                rc = spdk_nvme_ns_cmd_write(
+                    device->ns_entry->ns, device->qpair, io->buffer,
+                    io->target_lba, io->lba_count, io_complete, (void *)io, 0);
+            }
+
+            if (rc != 0) {
+                io->complete_callback(io->complete_callback_context, rc, 0);
+                put_internal_io_context(io);
+            }
+        }
+
+        // poll completion.
         int l_device_num = device_num;
         if (l_device_num == 0) {
             continue;
         }
-        device = &g_spdk_device_list[qp_pointer];
+        struct spdk_device *device = &g_spdk_device_list[qp_pointer];
         int complete_io_num =
             spdk_nvme_qpair_process_completions(device->qpair, IO_BATCH_NUM);
         if (complete_io_num > 0) {

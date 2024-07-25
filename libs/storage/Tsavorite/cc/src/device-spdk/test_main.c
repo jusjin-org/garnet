@@ -25,7 +25,7 @@ int main()
 
     sem_init(&mutex, 0, 0);
 
-    rc = spdk_device_init();
+    rc = init();
     begin_poller();
     if (rc != 0) {
         fprintf(stderr, "spdk_device_init failed with: %d \n", rc);

@@ -16,6 +16,8 @@ typedef void (*AsyncIOCallback)(void *context, int32_t result,
 struct spdk_ns_entry {
     struct spdk_nvme_ctrlr *ctrlr;
     struct spdk_nvme_ns *ns;
+    uint64_t ns_size;
+    uint32_t ns_sector_size;
     int32_t nsid;
 };
 
@@ -24,10 +26,15 @@ struct spdk_device {
     struct spdk_nvme_qpair *qpair;
 };
 
-EXPORTED_SYMBOL int32_t spdk_device_init();
+EXPORTED_SYMBOL int32_t init();
 
 EXPORTED_SYMBOL struct spdk_device *spdk_device_create(int nsid);
 // TODO: chyin add destroy function.
+
+EXPORTED_SYMBOL uint64_t spdk_device_get_ns_size(struct spdk_device *device);
+
+EXPORTED_SYMBOL uint32_t
+spdk_device_get_ns_sector_size(struct spdk_device *device);
 
 EXPORTED_SYMBOL int32_t spdk_device_read_async(struct spdk_device *device,
                                                uint64_t source, void *dest,

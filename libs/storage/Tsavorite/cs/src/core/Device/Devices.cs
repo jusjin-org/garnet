@@ -35,7 +35,7 @@ namespace Tsavorite.core
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && useNativeDeviceLinux)
                 {
-                    if (logPath.ToLower().Contains("aof.log"))
+                    if (logPath.ToLower().Contains("aof.log") || logPath.ToLower().Contains("tier"))
                     {
                         // return new FakeNullDevice();
                         // return new NullDevice();
