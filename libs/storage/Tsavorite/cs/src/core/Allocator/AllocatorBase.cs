@@ -203,7 +203,7 @@ namespace Tsavorite.core
         internal readonly PendingFlushList[] PendingFlush;
 
         /// <summary>
-        /// Global address of the current tail (next element to be allocated from the circular buffer) 
+        /// Global address of the current tail (next element to be allocated from the circular buffer)
         /// </summary>
         private PageOffset TailPageOffset;
 
@@ -886,6 +886,18 @@ namespace Tsavorite.core
             AlignedPageSizeBytes = (PageSize + (sectorSize - 1)) & ~(sectorSize - 1);
         }
 
+        public IntPtr get_spdk_io_device()
+        {
+            SPDKDevice spdk_device = this.device as SPDKDevice;
+            return spdk_device.get_spdk_io_device();
+        }
+
+        public void put_spdk_io_device(IntPtr spdk_io_device)
+        {
+            SPDKDevice spdk_device = this.device as SPDKDevice;
+            spdk_device.put_spdk_io_device(spdk_io_device);
+        }
+
         /// <summary>
         /// Number of extra overflow pages allocated
         /// </summary>
@@ -1343,13 +1355,13 @@ namespace Tsavorite.core
             return logicalAddress;
         }
 
-        // If the page we are trying to allocate is past the last page with an unclosed address region, 
-        // then we can retry immediately because this is called after NeedToWait, so we know we've 
+        // If the page we are trying to allocate is past the last page with an unclosed address region,
+        // then we can retry immediately because this is called after NeedToWait, so we know we've
         // completed the wait on flushEvent for the necessary pages to be flushed, and are waiting for
         // OnPagesClosed to be completed.
         private bool CannotAllocate(int page) => page >= BufferSize + (ClosedUntilAddress >> LogPageSizeBits);
 
-        // If the page we are trying to allocate is past the last page with an unflushed address region, 
+        // If the page we are trying to allocate is past the last page with an unflushed address region,
         // we have to wait for the flushEvent.
         private bool NeedToWait(int page) => page >= BufferSize + (FlushedUntilAddress >> LogPageSizeBits);
 
@@ -1480,6 +1492,12 @@ namespace Tsavorite.core
             return device.TryComplete();
         }
 
+        internal virtual bool TryComplete(IntPtr spdk_io_device)
+        {
+            SPDKDevice spdk_device = device as SPDKDevice;
+            return spdk_device.TryComplete(spdk_io_device);
+        }
+
         /// <summary>
         /// Seal: make sure there are no longer any threads writing to the page
         /// Flush: send page to secondary store
@@ -1502,8 +1520,8 @@ namespace Tsavorite.core
             }
         }
 
-        /// <summary>   
-        /// Action to be performed for when all threads have 
+        /// <summary>
+        /// Action to be performed for when all threads have
         /// agreed that a page range is closed.
         /// </summary>
         /// <param name="newSafeHeadAddress"></param>
@@ -1560,7 +1578,7 @@ namespace Tsavorite.core
                     if (OnEvictionObserver is not null)
                         MemoryPageScan(start, end, OnEvictionObserver);
 
-                    // If we are using a null storage device, we must also shift BeginAddress 
+                    // If we are using a null storage device, we must also shift BeginAddress
                     if (IsNullDevice)
                         Utility.MonotonicUpdate(ref BeginAddress, end, out _);
 
@@ -1599,7 +1617,7 @@ namespace Tsavorite.core
         }
 
         /// <summary>
-        /// Called every time a new tail page is allocated. Here the read-only is 
+        /// Called every time a new tail page is allocated. Here the read-only is
         /// shifted only to page boundaries unlike ShiftReadOnlyToTail where shifting
         /// can happen to any fine-grained address.
         /// </summary>
@@ -1761,14 +1779,14 @@ namespace Tsavorite.core
         }
 
         /// <summary>
-        /// Invoked by users to obtain a record from disk. It uses sector aligned memory to read 
+        /// Invoked by users to obtain a record from disk. It uses sector aligned memory to read
         /// the record efficiently into memory.
         /// </summary>
         /// <param name="fromLogical"></param>
         /// <param name="numBytes"></param>
         /// <param name="callback"></param>
         /// <param name="context"></param>
-        /// 
+        ///
         internal unsafe void AsyncReadRecordToMemory(long fromLogical, int numBytes, DeviceIOCompletionCallback callback, ref AsyncIOContext<Key, Value> context)
         {
             ulong fileOffset = (ulong)(AlignedPageSizeBytes * (fromLogical >> LogPageSizeBits) + (fromLogical & PageSizeMask));
@@ -1785,11 +1803,20 @@ namespace Tsavorite.core
             var asyncResult = default(AsyncGetFromDiskResult<AsyncIOContext<Key, Value>>);
             asyncResult.context = context;
             asyncResult.context.record = record;
-            device.ReadAsync(alignedFileOffset,
+            SPDKDevice spdk_device = device as SPDKDevice;
+            spdk_device.read_async_with_device(0,
+                        alignedFileOffset,
+                (IntPtr)asyncResult.context.record.aligned_pointer,
+                        alignedReadLength,
+                        callback,
+                        asyncResult,
+                        context.spdk_io_device
+            );
+            /* device.ReadAsync(alignedFileOffset,
                         (IntPtr)asyncResult.context.record.aligned_pointer,
                         alignedReadLength,
                         callback,
-                        asyncResult);
+                        asyncResult); */
         }
 
         /// <summary>

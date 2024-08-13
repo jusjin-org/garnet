@@ -1,4 +1,4 @@
-#include "spdk_device.h"
+#include "spdk_io_device.h"
 #include <error.h>
 #include <semaphore.h>
 #include <string.h>
@@ -21,27 +21,24 @@ void io_callback(void *context, int32_t result, uint32_t bytes_transferred)
 int main()
 {
     int rc = 0;
-    struct spdk_device *device = NULL;
+    struct spdk_io_device *io_device = NULL;
 
     sem_init(&mutex, 0, 0);
 
     rc = init();
-    begin_poller();
-    if (rc != 0) {
-        fprintf(stderr, "spdk_device_init failed with: %d \n", rc);
-        goto exit;
-    }
 
-    device = spdk_device_create(1);
-    if (device == NULL) {
+    io_device = spdk_io_device_create(1);
+    if (io_device == NULL) {
         fprintf(stderr, "device is NULL\n");
         goto exit;
     }
 
+    spdk_io_device_begin_poll(io_device, -1);
+
     const char *data = "hello world";
     strcpy(g_data_buff, data);
-    rc = spdk_device_write_async(device, g_data_buff, 0, SIZE_4K, io_callback,
-                                 NULL);
+    rc = spdk_io_device_write_async(io_device, g_data_buff, 0, SIZE_4K,
+                                    io_callback, NULL);
     if (rc != 0) {
         fprintf(stderr, "I/O write error %d.\n", rc);
         goto exit;
@@ -53,8 +50,8 @@ int main()
         goto exit;
     }
 
-    rc = spdk_device_read_async(device, 0, g_data_read, SIZE_4K, io_callback,
-                                NULL);
+    rc = spdk_io_device_read_async(io_device, 0, g_data_read, SIZE_4K,
+                                   io_callback, NULL);
     if (rc != 0) {
         fprintf(stderr, "I/O read error %d.\n", rc);
         goto exit;

@@ -44,7 +44,7 @@ namespace Tsavorite.core
         CANCELED = StatusCode.Canceled,
 
         /// <summary>
-        /// The maximum range that directly maps to the <see cref="StatusCode"/> enumeration; the operation completed. 
+        /// The maximum range that directly maps to the <see cref="StatusCode"/> enumeration; the operation completed.
         /// This is an internal code to reserve ranges in the <see cref="OperationStatus"/> enumeration.
         /// </summary>
         MAX_MAP_TO_COMPLETED_STATUSCODE = CANCELED,
@@ -52,7 +52,7 @@ namespace Tsavorite.core
         // Not-completed Status codes
 
         /// <summary>
-        /// Retry operation immediately, within the current epoch. This is only used in situations where another thread does not need to do another operation 
+        /// Retry operation immediately, within the current epoch. This is only used in situations where another thread does not need to do another operation
         /// to bring things into a consistent state.
         /// </summary>
         RETRY_NOW,
@@ -238,6 +238,8 @@ namespace Tsavorite.core
 
             // Control automatic Read copy operations. These flags override flags specified at the TsavoriteKV level, but may be overridden on the individual Read() operations
             internal ReadCopyOptions ReadCopyOptions;
+
+            public IntPtr spdk_io_device;
 
             internal long version;
             internal long serialNum;

@@ -13,50 +13,67 @@ namespace Tsavorite.core
     public class SPDKDevice : StorageDeviceBase
     {
         #region native_lib
+        private static int polling_core = 15;
         private const string spdk_library_name = "spdk_device";
         // private const string spdk_library_path =
         //                        "runtimes/linux-x64/native/libspdk_device.so";
         private const string spdk_library_path =
-        "/root/source/repos/garnet/libs/storage/Tsavorite/cs/src/core/Device/runtimes/linux-x64/native/libspdk_device.so";
+        "/root/source/repos/garnet/libs/storage/Tsavorite/cs/src/core/Device/runtimes/linux-x64/native/libspdk_io_device.so";
 
         [DllImport(spdk_library_name, EntryPoint = "init",
                    CallingConvention = CallingConvention.Cdecl)]
         static extern int init();
 
-        [DllImport(spdk_library_name, EntryPoint = "spdk_device_create",
+        [DllImport(spdk_library_name, EntryPoint = "spdk_io_device_create",
                    CallingConvention = CallingConvention.Cdecl)]
-        static extern IntPtr spdk_device_create(uint nsid);
+        static extern IntPtr spdk_io_device_create(uint nsid);
 
-        [DllImport(spdk_library_name, EntryPoint = "spdk_device_get_ns_size",
+        [DllImport(spdk_library_name, EntryPoint = "spdk_io_device_destroy",
                    CallingConvention = CallingConvention.Cdecl)]
-        static extern ulong spdk_device_get_ns_size(IntPtr device);
+        static extern void spdk_io_device_destroy(IntPtr io_device);
+
+        [DllImport(spdk_library_name, EntryPoint = "spdk_io_device_get_ns_size",
+                   CallingConvention = CallingConvention.Cdecl)]
+        static extern ulong spdk_io_device_get_ns_size(int nsid);
 
         [DllImport(spdk_library_name,
-                   EntryPoint = "spdk_device_get_ns_sector_size",
+                   EntryPoint = "spdk_io_device_get_ns_sector_size",
                    CallingConvention = CallingConvention.Cdecl)]
-        static extern uint spdk_device_get_ns_sector_size(IntPtr device);
+        static extern uint spdk_io_device_get_ns_sector_size(int nsid);
 
-        [DllImport(spdk_library_name, EntryPoint = "spdk_device_read_async",
+        [DllImport(spdk_library_name, EntryPoint = "spdk_io_device_read_async",
                    CallingConvention = CallingConvention.Cdecl)]
-        static extern int spdk_device_read_async(IntPtr device, ulong source,
-                                                 IntPtr dest, uint length,
-                                                 AsyncIOCallback callback,
-                                                 IntPtr context);
+        static extern int spdk_io_device_read_async(IntPtr io_device,
+                                                    ulong source,
+                                                    IntPtr dest, uint length,
+                                                    AsyncIOCallback callback,
+                                                    IntPtr context);
 
-        [DllImport(spdk_library_name, EntryPoint = "spdk_device_write_async",
+        [DllImport(spdk_library_name, EntryPoint = "spdk_io_device_write_async",
                    CallingConvention = CallingConvention.Cdecl)]
-        static extern int spdk_device_write_async(IntPtr device, IntPtr source,
-                                                  ulong dest, uint length,
-                                                  AsyncIOCallback callback,
-                                                  IntPtr context);
+        static extern int spdk_io_device_write_async(IntPtr io_device,
+                                                     IntPtr source,
+                                                     ulong dest, uint length,
+                                                     AsyncIOCallback callback,
+                                                     IntPtr context);
 
-        [DllImport(spdk_library_name, EntryPoint = "begin_poller",
+        [DllImport(spdk_library_name, EntryPoint = "spdk_io_device_poll",
                    CallingConvention = CallingConvention.Cdecl)]
-        static extern void begin_poller();
+        static extern int spdk_io_device_poll(IntPtr io_device, uint batch_num);
 
-        [DllImport(spdk_library_name, EntryPoint = "spdk_device_poll",
+
+        [DllImport(spdk_library_name, EntryPoint = "spdk_io_device_begin_poll",
                    CallingConvention = CallingConvention.Cdecl)]
-        static extern int spdk_device_poll(uint timeout);
+        static extern int spdk_io_device_begin_poll(IntPtr io_device,
+                                                    int affinity);
+
+        [DllImport(spdk_library_name, EntryPoint = "spdk_io_device_stop_poll",
+                   CallingConvention = CallingConvention.Cdecl)]
+        static extern void spdk_io_device_stop_poll(IntPtr io_device);
+
+        static int spdk_io_device_num = 32;
+        static ConcurrentQueue<IntPtr> spdk_io_device_queue;
+        const int nsid = 1;
 
         static IntPtr import_resolver(string library_name, Assembly assembley,
                                       DllImportSearchPath? search_path)
@@ -76,18 +93,22 @@ namespace Tsavorite.core
             NativeLibrary.SetDllImportResolver(typeof(SPDKDevice).Assembly,
                                                import_resolver);
             init();
-            begin_poller();
+            SPDKDevice.spdk_io_device_queue = new ConcurrentQueue<IntPtr>();
+            for (int i = 0; i < SPDKDevice.spdk_io_device_num; i++)
+            {
+                SPDKDevice.spdk_io_device_queue.Enqueue(spdk_io_device_create(
+                                                            SPDKDevice.nsid
+                                                        ));
+            }
         }
         #endregion
 
-
-        private const int nsid = 1;
         readonly ILogger logger;
+        readonly IntPtr polling_spdk_io_device;
 
         private int num_pending = 0;
 
         ObjectPool<SPDKIOContextWrap> spdk_context_pool;
-        IntPtr native_spdk_device;
 
         private delegate void AsyncIOCallback(IntPtr context, int result,
                                               ulong bytesTransferred);
@@ -108,13 +129,13 @@ namespace Tsavorite.core
             DeviceIOCompletionCallback t_callback =
                                          io_context.tsavorite_callback;
             object t_context = io_context.tsavorite_callback_context;
-            this.spdk_context_pool.Return(io_context);
-            Interlocked.Decrement(ref this.num_pending);
             t_callback(
                 (uint)error_code,
                 (uint)num_bytes,
                 t_context
             );
+            this.spdk_context_pool.Return(io_context);
+            Interlocked.Decrement(ref this.num_pending);
         }
 
         public SPDKDevice(string filename,
@@ -126,22 +147,17 @@ namespace Tsavorite.core
         {
             if (filename.ToLower().Contains("hlog"))
             {
-                if (filename.ToLower().Contains("objstore"))
-                {
-                    // ObjStore/hlog
-                    this.start_address = 200L * 1024 * 1024 * 1024; // 200G
-                }
-                else if (filename.ToLower().Contains("hlog.obj"))
-                {
-                    // ObjStore/hlog.obj
-                    this.start_address = 300L * 1024 * 1024 * 1024; // 300G
-                }
-                else
-                {
-                    // Store/hlog
-                    this.start_address = 100L * 1024 * 1024 * 1024; // 100G
-                }
-
+                this.start_address = 100L * 1024 * 1024 * 1024; // 100G
+            }
+            while (!SPDKDevice.spdk_io_device_queue.TryDequeue(
+                    out this.polling_spdk_io_device
+            )) { }
+            int rc = spdk_io_device_begin_poll(this.polling_spdk_io_device,
+                                               SPDKDevice.polling_core);
+            SPDKDevice.polling_core -= 1;
+            if (rc != 0)
+            {
+                throw new Exception("can't init polling thread.");
             }
             this._callback_delegate = this._callback;
 
@@ -151,13 +167,10 @@ namespace Tsavorite.core
                 new DefaultPooledObjectPolicy<SPDKIOContextWrap>()
             );
 
-            this.native_spdk_device = spdk_device_create(SPDKDevice.nsid);
-            this.SectorSize = spdk_device_get_ns_sector_size(
-                this.native_spdk_device
+            this.SectorSize = spdk_io_device_get_ns_sector_size(
+                SPDKDevice.nsid
             );
-            this.Capacity = (long)spdk_device_get_ns_size(
-                this.native_spdk_device
-            );
+            this.Capacity = (long)spdk_io_device_get_ns_size(SPDKDevice.nsid);
         }
 
         public override void Initialize(long segmentSize,
@@ -177,23 +190,41 @@ namespace Tsavorite.core
             return address;
         }
 
-        public override void ReadAsync(int segment_id, ulong source_address,
-                                       IntPtr destination_address,
-                                       uint read_length,
-                                       DeviceIOCompletionCallback callback,
-                                       object context)
+
+        public IntPtr get_spdk_io_device()
+        {
+            IntPtr spdk_io_device;
+            while (!SPDKDevice.spdk_io_device_queue.TryDequeue(
+                       out spdk_io_device
+                    ))
+            { }
+            return spdk_io_device;
+        }
+
+        public void put_spdk_io_device(IntPtr spdk_io_device)
+        {
+            SPDKDevice.spdk_io_device_queue.Enqueue(spdk_io_device);
+        }
+
+        public void read_async_with_device(int segment_id,
+                                           ulong source_address,
+                                           IntPtr destination_address,
+                                           uint read_length,
+                                           DeviceIOCompletionCallback callback,
+                                           object context,
+                                           IntPtr spdk_io_device)
         {
             if (Interlocked.Increment(ref this.num_pending) <= 0)
             {
                 throw new Exception("Cannot operate on disposed device");
             }
 
+            SPDKIOContextWrap io_context = this.spdk_context_pool.Get();
             try
             {
-                SPDKIOContextWrap io_context = this.spdk_context_pool.Get();
                 io_context.init_io(callback, context);
-                int _result = spdk_device_read_async(
-                    this.native_spdk_device,
+                int _result = spdk_io_device_read_async(
+                    spdk_io_device,
                     this.get_address(segment_id, source_address),
                     destination_address,
                     read_length,
@@ -209,32 +240,53 @@ namespace Tsavorite.core
             catch (IOException e)
             {
                 Interlocked.Decrement(ref this.num_pending);
+                this.spdk_context_pool.Return(io_context);
                 callback((uint)(e.HResult & 0x0000FFFF), 0, context);
             }
             catch (Exception e)
             {
                 Interlocked.Decrement(ref this.num_pending);
+                this.spdk_context_pool.Return(io_context);
                 callback((uint)e.HResult, 0, context);
             }
         }
 
-        public override void WriteAsync(IntPtr source_address, int segment_id,
-                                        ulong destination_address,
-                                        uint write_length,
-                                        DeviceIOCompletionCallback callback,
-                                        object context)
+        public override void ReadAsync(int segment_id, ulong source_address,
+                                       IntPtr destination_address,
+                                       uint read_length,
+                                       DeviceIOCompletionCallback callback,
+                                       object context)
+        {
+            this.read_async_with_device(
+                segment_id,
+                source_address,
+                destination_address,
+                read_length,
+                callback,
+                context,
+                this.polling_spdk_io_device
+            );
+        }
+
+        public void write_async_with_device(IntPtr source_address,
+                                            int segment_id,
+                                            ulong destination_address,
+                                            uint write_length,
+                                            DeviceIOCompletionCallback callback,
+                                            object context,
+                                            IntPtr spdk_io_device)
         {
             if (Interlocked.Increment(ref this.num_pending) <= 0)
             {
                 throw new Exception("Cannot operate on disposed device");
             }
 
+            SPDKIOContextWrap io_context = this.spdk_context_pool.Get();
             try
             {
-                SPDKIOContextWrap io_context = this.spdk_context_pool.Get();
                 io_context.init_io(callback, context);
-                int _result = spdk_device_write_async(
-                    this.native_spdk_device,
+                int _result = spdk_io_device_write_async(
+                    spdk_io_device,
                     source_address,
                     this.get_address(segment_id, destination_address),
                     write_length,
@@ -250,13 +302,46 @@ namespace Tsavorite.core
             catch (IOException e)
             {
                 Interlocked.Decrement(ref this.num_pending);
+                this.spdk_context_pool.Return(io_context);
                 callback((uint)(e.HResult & 0x0000FFFF), 0, context);
             }
             catch (Exception e)
             {
                 Interlocked.Decrement(ref this.num_pending);
+                this.spdk_context_pool.Return(io_context);
                 callback((uint)e.HResult, 0, context);
             }
+        }
+
+        public override void WriteAsync(IntPtr source_address, int segment_id,
+                                        ulong destination_address,
+                                        uint write_length,
+                                        DeviceIOCompletionCallback callback,
+                                        object context)
+        {
+            this.write_async_with_device(
+                source_address,
+                segment_id,
+                destination_address,
+                write_length, callback,
+                context,
+                this.polling_spdk_io_device
+            );
+        }
+
+        public bool TryComplete(IntPtr spdk_io_device)
+        {
+            int poll_count = 0;
+            while (poll_count < 30)
+            {
+                int complete_io = spdk_io_device_poll(spdk_io_device, 8);
+                if (complete_io != 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public override void RemoveSegment(int segment)
@@ -293,7 +378,7 @@ namespace Tsavorite.core
         }
     }
 
-    class SPDKIOContextWrap : IDisposable, IResettable
+    public class SPDKIOContextWrap : IDisposable, IResettable
     {
         class SPDKIOContext
         {

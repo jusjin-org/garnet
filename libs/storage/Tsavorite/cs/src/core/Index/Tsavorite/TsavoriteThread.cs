@@ -18,7 +18,7 @@ namespace Tsavorite.core
             {
                 if (_recoveredSessions.TryGetValue(sessionID, out _))
                 {
-                    // We have recovered the corresponding session. 
+                    // We have recovered the corresponding session.
                     // Now obtain the session by first locking the rest phase
                     var currentState = SystemState.Copy(ref systemState);
                     if (currentState.Phase == Phase.REST)
@@ -29,7 +29,7 @@ namespace Tsavorite.core
                             // No one can change from REST phase
                             if (_recoveredSessions.TryRemove(sessionID, out var cp))
                             {
-                                // We have atomically removed session details. 
+                                // We have atomically removed session details.
                                 // No one else can continue this session
                                 ctx = new TsavoriteExecutionContext<Input, Output, Context>();
                                 InitContext(ctx, sessionID, cp.Item1);
@@ -147,10 +147,10 @@ namespace Tsavorite.core
         {
             while (true)
             {
+                if (tsavoriteSession.Ctx.HasNoPendingRequests) return true;
+
                 InternalCompletePendingRequests(tsavoriteSession, completedOutputs);
                 if (wait) tsavoriteSession.Ctx.WaitPending(epoch);
-
-                if (tsavoriteSession.Ctx.HasNoPendingRequests) return true;
 
                 InternalRefresh<Input, Output, Context, TsavoriteSession>(tsavoriteSession);
 
@@ -166,7 +166,11 @@ namespace Tsavorite.core
                                                                                              CompletedOutputIterator<Key, Value, Input, Output, Context> completedOutputs)
             where TsavoriteSession : ITsavoriteSession<Key, Value, Input, Output, Context>
         {
-            hlog.TryComplete();
+
+            while (!hlog.TryComplete(tsavoriteSession.Ctx.spdk_io_device))
+            {
+                Thread.Yield();
+            }
 
             if (tsavoriteSession.Ctx.readyResponses.Count == 0) return;
 
