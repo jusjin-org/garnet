@@ -42,7 +42,7 @@ namespace Tsavorite.core
                         if (logPath.ToLower().Contains("objectstore"))
                         {
                             // ObjectStore/hlog
-                            return new ManagedLocalStorageDevice(logPath, preallocateFile, deleteOnClose, disableFileBuffering, capacity, recoverDevice); return new ManagedLocalStorageDevice(logPath, preallocateFile, deleteOnClose, disableFileBuffering, capacity, recoverDevice);
+                            return new ManagedLocalStorageDevice(logPath, preallocateFile, deleteOnClose, disableFileBuffering, capacity, recoverDevice);
                         }
                         else
                         {
@@ -51,7 +51,7 @@ namespace Tsavorite.core
                     }
                     else
                     {
-                        return new ManagedLocalStorageDevice(logPath, preallocateFile, deleteOnClose, disableFileBuffering, capacity, recoverDevice); return new ManagedLocalStorageDevice(logPath, preallocateFile, deleteOnClose, disableFileBuffering, capacity, recoverDevice);
+                        return new ManagedLocalStorageDevice(logPath, preallocateFile, deleteOnClose, disableFileBuffering, capacity, recoverDevice);
                         // return new NativeStorageDevice(logPath, deleteOnClose, disableFileBuffering, capacity, logger: logger);
                     }
                 }
