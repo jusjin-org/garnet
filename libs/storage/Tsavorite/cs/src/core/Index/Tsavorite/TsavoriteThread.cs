@@ -166,17 +166,20 @@ namespace Tsavorite.core
                                                                                              CompletedOutputIterator<Key, Value, Input, Output, Context> completedOutputs)
             where TsavoriteSession : ITsavoriteSession<Key, Value, Input, Output, Context>
         {
-
-            while (!hlog.TryComplete(tsavoriteSession.Ctx.spdk_io_device))
+            while (true)
             {
-                Thread.Yield();
-            }
+                hlog.TryComplete(tsavoriteSession.Ctx.spdk_io_device);
 
-            if (tsavoriteSession.Ctx.readyResponses.Count == 0) return;
+                if (tsavoriteSession.Ctx.readyResponses.Count == 0)
+                {
+                    Thread.Yield();
+                    continue;
+                }
 
-            while (tsavoriteSession.Ctx.readyResponses.TryDequeue(out AsyncIOContext<Key, Value> request))
-            {
-                InternalCompletePendingRequest(tsavoriteSession, request, completedOutputs);
+                while (tsavoriteSession.Ctx.readyResponses.TryDequeue(out AsyncIOContext<Key, Value> request))
+                {
+                    InternalCompletePendingRequest(tsavoriteSession, request, completedOutputs);
+                }
             }
         }
 

@@ -151,7 +151,10 @@ namespace Tsavorite.core
             }
             while (!SPDKDevice.spdk_io_device_queue.TryDequeue(
                     out this.polling_spdk_io_device
-            )) { }
+            ))
+            {
+                throw new Exception("No enough spdk_io_device in queue.");
+            }
             int rc = spdk_io_device_begin_poll(this.polling_spdk_io_device,
                                                SPDKDevice.polling_core);
             SPDKDevice.polling_core -= 1;
@@ -339,6 +342,7 @@ namespace Tsavorite.core
                 {
                     return true;
                 }
+                poll_count += 1;
             }
 
             return false;

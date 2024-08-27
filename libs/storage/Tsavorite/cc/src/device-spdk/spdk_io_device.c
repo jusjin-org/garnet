@@ -2,7 +2,6 @@
 
 #include "spdk_io_device.h"
 
-#include <error.h>
 #include <locale.h>
 #include <rte_ring.h>
 #include <threads.h>
@@ -136,7 +135,7 @@ int init()
     }
     if (attach_error != 0) {
         fprintf(stderr, "ERROR: some ns register failed with error code: %d\n.",
-                errno);
+                attach_error);
         rc = attach_error;
         goto exit;
     }
@@ -147,7 +146,6 @@ int init()
         goto exit;
     }
 
-    initted = true;
 exit:
     if (rc == 0) {
         initted = true;
@@ -258,15 +256,18 @@ uint32_t spdk_io_device_get_ns_sector_size(int32_t nsid)
 
 struct spdk_io_device *spdk_io_device_create(uint32_t nsid)
 {
+    struct spdk_io_device *device = NULL;
+
     struct spdk_ns_entry *ns = ns_lookup(nsid);
     if (ns == NULL) {
         fprintf(stderr, "ERROR: can't find ns:%d\n", nsid);
         goto exit;
     }
 
-    struct spdk_io_device *device = malloc(sizeof(struct spdk_io_device));
+    device = malloc(sizeof(struct spdk_io_device));
     if (device == NULL) {
         fprintf(stderr, "ERROR: can't create spdk_device. Out of memory.\n");
+        goto exit;
     }
 
     device->ns = ns;
@@ -397,10 +398,6 @@ void *spdk_io_device_poller(void *arg)
     bool l_is_polling = io_device->is_polling;
     int poll_count = 0;
 
-    struct timespec ts;
-    ts.tv_sec = 0;
-    ts.tv_nsec = 10 * 1000000;
-
     while (l_is_polling) {
         // submit IO.
         int rc;
@@ -432,8 +429,6 @@ void *spdk_io_device_poller(void *arg)
         if (poll_count == 300) {
             poll_count = 0;
             l_is_polling = io_device->is_polling;
-            ts.tv_sec = 0;
-            ts.tv_nsec = 10 * 1000000;
         }
     }
 
