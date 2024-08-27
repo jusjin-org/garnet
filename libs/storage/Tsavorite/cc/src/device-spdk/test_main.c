@@ -30,6 +30,7 @@ int main()
     io_device = spdk_io_device_create(1);
     if (io_device == NULL) {
         fprintf(stderr, "device is NULL\n");
+        rc = -1;
         goto exit;
     }
 
