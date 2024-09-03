@@ -71,8 +71,8 @@ namespace Garnet.cluster
                 else
                 {
                     var current = clusterProvider.clusterManager.CurrentConfig;
-                    var nodeRole = current.LocalNodeRole;
-                    if (nodeRole == NodeRole.REPLICA)
+                    // Make local node configuration indicates that this a replica with a configured primary
+                    if (current.IsReplica && current.LocalNodePrimaryId != null)
                     {
                         if (!clusterProvider.failoverManager.TryStartReplicaFailover(failoverOption, failoverTimeout))
                         {
@@ -83,7 +83,7 @@ namespace Garnet.cluster
                     }
                     else
                     {
-                        while (!RespWriteUtils.WriteError($"ERR Node is not a {NodeRole.REPLICA} ~{nodeRole}~", ref dcurr, dend))
+                        while (!RespWriteUtils.WriteError($"ERR Node is not configured as a {NodeRole.REPLICA}", ref dcurr, dend))
                             SendAndReset();
                         return true;
                     }
@@ -99,42 +99,6 @@ namespace Garnet.cluster
 
             // Finally return +OK if operation completed without any errors            
             while (!RespWriteUtils.WriteDirect(CmdStrings.RESP_OK, ref dcurr, dend))
-                SendAndReset();
-
-            return true;
-        }
-
-        /// <summary>
-        /// Implements CLUSTER failauthreq command (only for internode use)
-        /// </summary>
-        /// <returns></returns>
-        private bool NetworkClusterFailAuthReq(int count, out bool invalidParameters)
-        {
-            invalidParameters = false;
-
-            // Expecting exactly 3 arguments
-            if (count != 3)
-            {
-                invalidParameters = true;
-                return true;
-            }
-
-            var ptr = recvBufferPtr + readHead;
-            if (!RespReadUtils.ReadByteArrayWithLengthHeader(out var nodeIdBytes, ref ptr, recvBufferPtr + bytesRead))
-                return false;
-
-            if (!RespReadUtils.ReadByteArrayWithLengthHeader(out var requestEpochBytes, ref ptr, recvBufferPtr + bytesRead))
-                return false;
-
-            if (!RespReadUtils.ReadByteArrayWithLengthHeader(out var claimedSlots, ref ptr, recvBufferPtr + bytesRead))
-                return false;
-            readHead = (int)(ptr - recvBufferPtr);
-
-            var resp = clusterProvider.clusterManager.AuthorizeFailover(
-                Encoding.ASCII.GetString(nodeIdBytes),
-                BitConverter.ToInt64(requestEpochBytes),
-                claimedSlots) ? CmdStrings.RESP_RETURN_VAL_1 : CmdStrings.RESP_RETURN_VAL_0;
-            while (!RespWriteUtils.WriteDirect(resp, ref dcurr, dend))
                 SendAndReset();
 
             return true;
@@ -161,7 +125,16 @@ namespace Garnet.cluster
             if (!RespReadUtils.ReadByteArrayWithLengthHeader(out var nodeIdBytes, ref ptr, recvBufferPtr + bytesRead))
                 return false;
             readHead = (int)(ptr - recvBufferPtr);
-            clusterProvider.clusterManager.TryStopWrites(Encoding.ASCII.GetString(nodeIdBytes));
+
+            if (nodeIdBytes.Length > 0)
+            {// Make this node a primary after receiving a request from a replica that is trying to takeover
+                var nodeId = Encoding.ASCII.GetString(nodeIdBytes);
+                clusterProvider.clusterManager.TryStopWrites(nodeId);
+            }
+            else
+            {// Reset this node back to its original state
+                clusterProvider.clusterManager.TryResetReplica();
+            }
             UnsafeWaitForConfigTransition();
             while (!RespWriteUtils.WriteInteger(clusterProvider.replicationManager.ReplicationOffset, ref dcurr, dend))
                 SendAndReset();
