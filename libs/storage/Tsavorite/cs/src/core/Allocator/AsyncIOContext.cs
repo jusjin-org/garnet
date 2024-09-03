@@ -13,6 +13,8 @@ namespace Tsavorite.core
     /// </summary>
     public unsafe struct AsyncIOContext<Key, Value>
     {
+        public IntPtr spdk_io_device;
+
         /// <summary>
         /// Id
         /// </summary>

@@ -62,8 +62,9 @@ namespace Garnet.server
             var functions = new MainStoreFunctions(functionsState);
             session = storeWrapper.store.NewSession<SpanByte, SpanByteAndMemory, long, MainStoreFunctions>(functions);
 
-            var objstorefunctions = new ObjectStoreFunctions(functionsState);
-            objectStoreSession = storeWrapper.objectStore?.NewSession<SpanByte, GarnetObjectStoreOutput, long, ObjectStoreFunctions>(objstorefunctions);
+            //var objstorefunctions = new ObjectStoreFunctions(functionsState);
+            objectStoreSession = null;
+            // objectStoreSession = storeWrapper.objectStore?.NewSession<SpanByte, GarnetObjectStoreOutput, long, ObjectStoreFunctions>(objstorefunctions);
 
             basicContext = session.BasicContext;
             lockableContext = session.LockableContext;

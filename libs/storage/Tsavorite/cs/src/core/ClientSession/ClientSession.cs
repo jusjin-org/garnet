@@ -141,6 +141,7 @@ namespace Tsavorite.core
         {
             completedOutputs?.Dispose();
             CompletePending(true);
+            store.hlog.put_spdk_io_device(this.ctx.spdk_io_device);
             store.DisposeClientSession(ID, ctx.phase);
         }
 
@@ -1041,7 +1042,7 @@ namespace Tsavorite.core
         /// to the caller via <paramref name="scanFunctions"/> for each Key that is not found at a higher address.
         /// </summary>
         /// <param name="cursor">The cursor of the scan. If 0, start at BeginAddress, else this should be the value this was updated with on the previous call,
-        ///     which is the next address to return. If this is some other value, then for variable length records it must be validated by iterating from the 
+        ///     which is the next address to return. If this is some other value, then for variable length records it must be validated by iterating from the
         ///     start of the page, and iteration will start from the first valid logical address &lt;= this value. This is expensive.</param>
         /// <param name="count">The number of records to push.</param>
         /// <param name="scanFunctions">Caller functions called to push records. For this variant of Scan, this is not a ref param, because it will likely be copied through
@@ -1062,7 +1063,7 @@ namespace Tsavorite.core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void UnsafeResumeThread()
         {
-            // We do not track any "acquired" state here; if someone mixes calls between safe and unsafe contexts, they will 
+            // We do not track any "acquired" state here; if someone mixes calls between safe and unsafe contexts, they will
             // get the "trying to acquire already-acquired epoch" error.
             store.epoch.Resume();
             store.InternalRefresh<Input, Output, Context, InternalTsavoriteSession>(TsavoriteSession);

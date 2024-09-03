@@ -34,7 +34,27 @@ namespace Tsavorite.core
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && useNativeDeviceLinux)
-                    return new NativeStorageDevice(logPath, deleteOnClose, disableFileBuffering, capacity, logger: logger);
+                {
+                    if ((logPath.ToLower().Contains("aof.log")) || logPath.ToLower().Contains("hlog"))
+                    {
+                        // return new FakeNullDevice();
+                        // return new NullDevice();
+                        if (logPath.ToLower().Contains("objectstore"))
+                        {
+                            // ObjectStore/hlog
+                            return new ManagedLocalStorageDevice(logPath, preallocateFile, deleteOnClose, disableFileBuffering, capacity, recoverDevice);
+                        }
+                        else
+                        {
+                            return new SPDKDevice(logPath, deleteOnClose, disableFileBuffering, capacity, logger: logger);
+                        }
+                    }
+                    else
+                    {
+                        return new ManagedLocalStorageDevice(logPath, preallocateFile, deleteOnClose, disableFileBuffering, capacity, recoverDevice);
+                        // return new NativeStorageDevice(logPath, deleteOnClose, disableFileBuffering, capacity, logger: logger);
+                    }
+                }
                 else
                     return new ManagedLocalStorageDevice(logPath, preallocateFile, deleteOnClose, disableFileBuffering, capacity, recoverDevice);
             }

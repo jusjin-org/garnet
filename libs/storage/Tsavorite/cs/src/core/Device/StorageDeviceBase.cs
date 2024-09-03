@@ -8,25 +8,25 @@ using System.Threading;
 namespace Tsavorite.core
 {
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public abstract class StorageDeviceBase : IDevice
     {
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
-        public uint SectorSize { get; }
+        public virtual uint SectorSize { get; }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public string FileName { get; }
 
         /// <summary>
         /// <see cref="IDevice.Capacity"/>
         /// </summary>
-        public long Capacity { get; }
+        public virtual long Capacity { get; internal set; }
 
         /// <summary>
         /// <see cref="IDevice.StartSegment"/>
@@ -327,7 +327,7 @@ namespace Tsavorite.core
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="sourceAddress"></param>
         /// <param name="segmentId"></param>
@@ -338,7 +338,7 @@ namespace Tsavorite.core
         public abstract void WriteAsync(IntPtr sourceAddress, int segmentId, ulong destinationAddress, uint numBytesToWrite, DeviceIOCompletionCallback callback, object context);
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="segmentId"></param>
         /// <param name="sourceAddress"></param>
@@ -349,7 +349,7 @@ namespace Tsavorite.core
         public abstract void ReadAsync(int segmentId, ulong sourceAddress, IntPtr destinationAddress, uint readLength, DeviceIOCompletionCallback callback, object context);
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public abstract void Dispose();
 
@@ -359,7 +359,7 @@ namespace Tsavorite.core
         /// <param name="segment">Segment being written to</param>
         protected void HandleCapacity(int segment)
         {
-            // If the device has bounded space, and we are writing a new segment, need to check whether an existing segment needs to be evicted. 
+            // If the device has bounded space, and we are writing a new segment, need to check whether an existing segment needs to be evicted.
             if (Capacity != Devices.CAPACITY_UNSPECIFIED && Utility.MonotonicUpdate(ref endSegment, segment, out _))
             {
                 // Attempt to update the stored range until there is enough space on the tier to accomodate the current segment

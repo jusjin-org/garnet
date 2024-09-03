@@ -36,6 +36,8 @@ namespace Tsavorite.core
             prevCtx.version--;
             prevCtx.ReadCopyOptions = ctx.ReadCopyOptions;
 
+            ctx.spdk_io_device = this.hlog.get_spdk_io_device();
+
             ctx.prevCtx = prevCtx;
 
             if (_activeSessions == null)

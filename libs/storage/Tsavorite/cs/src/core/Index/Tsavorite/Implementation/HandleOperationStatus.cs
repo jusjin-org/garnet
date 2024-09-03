@@ -143,6 +143,7 @@ namespace Tsavorite.core
                 request.logicalAddress = pendingContext.logicalAddress;
                 request.minAddress = pendingContext.minAddress;
                 request.record = default;
+                request.spdk_io_device = sessionCtx.spdk_io_device;
                 if (pendingContext.IsAsync)
                     request.asyncOperation = new TaskCompletionSource<AsyncIOContext<Key, Value>>(TaskCreationOptions.RunContinuationsAsynchronously);
                 else

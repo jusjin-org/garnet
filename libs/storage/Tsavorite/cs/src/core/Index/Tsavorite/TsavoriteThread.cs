@@ -89,10 +89,10 @@ namespace Tsavorite.core
         {
             while (true)
             {
+                if (tsavoriteSession.Ctx.HasNoPendingRequests) return true;
+
                 InternalCompletePendingRequests(tsavoriteSession, completedOutputs);
                 if (wait) tsavoriteSession.Ctx.WaitPending(epoch);
-
-                if (tsavoriteSession.Ctx.HasNoPendingRequests) return true;
 
                 InternalRefresh<Input, Output, Context, TsavoriteSession>(tsavoriteSession);
 
@@ -108,13 +108,20 @@ namespace Tsavorite.core
                                                                                              CompletedOutputIterator<Key, Value, Input, Output, Context> completedOutputs)
             where TsavoriteSession : ITsavoriteSession<Key, Value, Input, Output, Context>
         {
-            hlog.TryComplete();
-
-            if (tsavoriteSession.Ctx.readyResponses.Count == 0) return;
-
-            while (tsavoriteSession.Ctx.readyResponses.TryDequeue(out AsyncIOContext<Key, Value> request))
+            while (true)
             {
-                InternalCompletePendingRequest(tsavoriteSession, request, completedOutputs);
+                hlog.TryComplete(tsavoriteSession.Ctx.spdk_io_device);
+
+                if (tsavoriteSession.Ctx.readyResponses.Count == 0)
+                {
+                    Thread.Yield();
+                    continue;
+                }
+
+                while (tsavoriteSession.Ctx.readyResponses.TryDequeue(out AsyncIOContext<Key, Value> request))
+                {
+                    InternalCompletePendingRequest(tsavoriteSession, request, completedOutputs);
+                }
             }
         }
 
